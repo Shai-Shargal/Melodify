@@ -1,10 +1,31 @@
-- 👋 Hi, I’m @Shai-Shargal
-- 👀 I’m interested in game development, software engineering, AI, and DevOps.
-- 🌱 I’m currently learning Docker, React, and advanced SQL.
-- 💞️ I’m looking to collaborate on open-source projects, especially related to game development, AI, or sports applications.
-- 📫 How to reach me: You can reach me via email at shai.shargal@gmail.com or on LinkedIn at https://www.linkedin.com/in/shai-shargal-5057991bb/.
-- 😄 Pronouns: He/Him
-- ⚡ Fun fact: I love playing sports and am building a platform for sports communities!
+# Hi there, I'm Shai Shargal! 👋
+
+I'm a passionate software developer with a love for coding and problem-solving. I enjoy working on innovative projects and learning new technologies.
+
+## 🔭 What I'm currently working on
+- Building awesome applications using the latest web technologies.
+- Contributing to open-source projects.
+- Exploring the world of AI and machine learning.
+
+## 🌱 What I'm currently learning
+- Advanced JavaScript and TypeScript.
+- Modern web frameworks like React and Vue.js.
+- Machine learning algorithms and their applications.
+
+## 💬 Ask me about
+- Web development (HTML, CSS, JavaScript, TypeScript).
+- Backend development (Node.js, Express, MongoDB).
+- Open-source contributions.
+
+## 📫 How to reach me
+- Email: shai.shargal@example.com
+- LinkedIn: [Shai Shargal](https://www.linkedin.com/in/shai-shargal/)
+- GitHub: [Shai-Shargal](https://github.com/Shai-Shargal)
+
+## ⚡ Fun fact
+I love hiking and exploring nature in my free time.
+
+Thanks for visiting my profile! Feel free to reach out if you want to collaborate on a project or just have a chat. 😊
 
 
 <!---

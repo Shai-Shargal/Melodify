@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .lego-btn {
+    @apply relative px-6 py-3 font-bold text-white rounded-lg shadow-lego 
+           transition-transform duration-200 ease-in-out
+           hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .lego-card {
+    @apply relative bg-white rounded-lg p-6 shadow-lego
+           transition-transform duration-200 ease-in-out
+           hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .lego-bump {
+    @apply before:content-[''] before:absolute before:w-8 before:h-8
+           before:rounded-full before:top-0 before:left-1/2
+           before:-translate-x-1/2 before:-translate-y-1/2
+           before:bg-current before:opacity-20;
+  }
+}

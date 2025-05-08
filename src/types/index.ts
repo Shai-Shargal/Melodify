@@ -13,6 +13,7 @@ export interface Song {
   rating?: number;
   isLiked: boolean;
   youtubeId?: string;
+  thumbnail?: string;
 }
 
 export interface Playlist {

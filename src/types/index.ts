@@ -1,0 +1,56 @@
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+}
+
+export interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  genre: string;
+  duration: string;
+  rating?: number;
+  isLiked: boolean;
+  youtubeId?: string;
+}
+
+export interface Playlist {
+  id: string;
+  name: string;
+  songs: Song[];
+  userId: string;
+}
+
+export interface FilterOptions {
+  genre?: string;
+  emotionalState?: string;
+  numberOfSongs?: number;
+  purpose?: string;
+}
+
+export enum EmotionalState {
+  Happy = "Happy",
+  Sad = "Sad",
+  Energetic = "Energetic",
+  Calm = "Calm",
+  Motivated = "Motivated",
+}
+
+export enum Purpose {
+  Study = "Study",
+  Workout = "Workout",
+  Chill = "Chill",
+  Party = "Party",
+  Focus = "Focus",
+}
+
+export enum Genre {
+  Pop = "Pop",
+  Rock = "Rock",
+  Classical = "Classical",
+  HipHop = "Hip Hop",
+  Jazz = "Jazz",
+  Electronic = "Electronic",
+  RnB = "R&B",
+}

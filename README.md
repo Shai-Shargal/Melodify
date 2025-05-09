@@ -10,9 +10,9 @@
 
 📫 You can reach me via:
 
-- [LinkedIn](#) (www.linkedin.com/in/shai-shargal-5057991bb)
+- [LinkedIn](www.linkedin.com/in/shai-shargal-5057991bb)
 - [GitHub](https://github.com/Shai-Shargal?tab=repositories)
-- Email: your.email@example.com
+- Email: shai.shargal@gmail.com
 
 🧩 Fun fact: I love building systems that combine text and image analysis – one of my side projects is an AI-based t-shirt design tool from user prompts!
 

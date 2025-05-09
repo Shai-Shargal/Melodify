@@ -1,4 +1,4 @@
-# 👋 Hi, I’m Shay
+# 👋 Hi, I’m Shai
 
 🎓 I'm a final-year Computer Science student at Afeka College of Engineering with a strong background in IT and a passion for software development, DevOps, and game development.
 

@@ -1,78 +1,21 @@
-# Music Recommendation Web App
+# 👋 Hi, I’m Shay
 
-A modern and responsive web application for music recommendations, built with React and TypeScript.
+🎓 I'm a final-year Computer Science student at Afeka College of Engineering with a strong background in IT and a passion for software development, DevOps, and game development.
 
-## Features
+💻 I have 3+ years of hands-on experience working in IT roles at global companies. I'm skilled in scripting, automation, and systems administration, and now I’m transitioning into software engineering and development.
 
-- User authentication (login/register)
-- Music filtering by:
-  - Genre
-  - Emotional state
-  - Number of songs
-  - Purpose (Study, Workout, Chill, etc.)
-- Song rating system (1-10)
-- Like/Unlike songs
-- Create and manage custom playlists
-- Modern UI with Tailwind CSS
+🚀 I’m currently working on **LeagueLink** – a platform for managing amateur and professional sports tournaments. It combines React, Node.js, MongoDB, and custom algorithms to support league creation, match tracking, and chat-based community building.
 
-## Tech Stack
+🧠 I'm always learning — from Docker and Python to C++, Unreal Engine, and machine learning. I enjoy solving problems, building projects from scratch, and learning how to scale real-world applications.
 
-- React 18
-- TypeScript
-- React Router v6
-- Tailwind CSS
-- Vite (for development)
+📫 You can reach me via:
 
-## Getting Started
+- [LinkedIn](#) (www.linkedin.com/in/shai-shargal-5057991bb)
+- [GitHub](https://github.com/Shai-Shargal?tab=repositories)
+- Email: your.email@example.com
 
-1. Clone the repository:
+🧩 Fun fact: I love building systems that combine text and image analysis – one of my side projects is an AI-based t-shirt design tool from user prompts!
 
-```bash
-git clone <repository-url>
-cd music-recommendation-app
-```
+---
 
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Start the development server:
-
-```bash
-npm start
-```
-
-4. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-## Project Structure
-
-```
-src/
-  ├── components/         # React components
-  ├── types/             # TypeScript type definitions
-  ├── data/              # Mock data
-  └── App.tsx            # Main application component
-```
-
-## Future Improvements
-
-- Integration with a real music API
-- User profile management
-- Social features (sharing playlists)
-- Advanced filtering options
-- Music player integration
-- Offline support
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+Feel free to fork or star this repo if you like my work 😊

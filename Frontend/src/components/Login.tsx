@@ -34,9 +34,14 @@ const Login = ({ setUser }: LoginProps) => {
 
       navigate("/dashboard");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Invalid email or password"
-      );
+      const errorMessage = err instanceof Error ? err.message : "";
+      if (errorMessage.includes("Invalid email or password")) {
+        setError("Invalid email or password");
+      } else if (errorMessage.includes("User not found")) {
+        setError("User not found");
+      } else {
+        setError("An error occurred during login. Please try again");
+      }
     }
   };
 

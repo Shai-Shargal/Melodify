@@ -229,28 +229,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center space-x-3">
-              <div
-                className={`p-2 rounded-lg ${
-                  isDarkMode ? "bg-indigo-900/50" : "bg-indigo-50"
-                }`}
-              >
-                <svg
-                  className={`w-6 h-6 ${
-                    isDarkMode ? "text-indigo-400" : "text-indigo-600"
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                  />
-                </svg>
-              </div>
+            <div className="flex items-center">
               <h1
                 className={`text-xl font-semibold ${
                   isDarkMode ? "text-white" : "text-gray-900"
@@ -429,30 +408,6 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 }`}
               >
                 <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className={`w-5 h-5 ${
-                        isDarkMode ? "text-gray-400" : "text-gray-500"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    <h2
-                      className={`text-lg font-medium ${
-                        isDarkMode ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      Welcome, {user.username}!
-                    </h2>
-                  </div>
                   <span
                     className={`px-3 py-1 rounded-full text-sm font-medium ${
                       isDarkMode
@@ -752,7 +707,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
             {/* Songs List */}
             <div
               className={`${
-                isDarkMode ? "bg-gray-800" : "bg-white"
+                isDarkMode ? "bg-gray-800" : "bg-white/80 backdrop-blur-sm"
               } rounded-xl shadow-lg overflow-hidden`}
             >
               <div className="px-6 py-4 border-b border-gray-200">

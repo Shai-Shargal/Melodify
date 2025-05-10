@@ -46,7 +46,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         width: "0",
         videoId: "",
         playerVars: {
-          autoplay: 0,
+          autoplay: 1,
           controls: 0,
           origin: window.location.origin,
           enablejsapi: 1,
@@ -54,11 +54,15 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           rel: 0,
           playsinline: 1,
           fs: 0,
-          iv_load_policy: 3, // Hide video annotations
-          showinfo: 0, // Hide video title and uploader
-          disablekb: 1, // Disable keyboard controls
-          cc_load_policy: 0, // Hide closed captions
-          host: "https://www.youtube-nocookie.com", // Use privacy-enhanced mode
+          iv_load_policy: 3,
+          showinfo: 0,
+          disablekb: 1,
+          cc_load_policy: 0,
+          host: "https://www.youtube-nocookie.com",
+          privacy: 1,
+          noCookie: true,
+          preventFullScreen: true,
+          widget_referrer: window.location.origin,
         },
         events: {
           onStateChange: (event: any) => {
@@ -69,15 +73,14 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           onError: (event: any) => {
             console.error("YouTube Player Error:", event.data);
             setCurrentlyPlaying(null);
-            // Show user-friendly error message
             setError("Failed to play video. Please try again.");
           },
           onReady: (event: any) => {
             console.log("YouTube Player Ready");
+            setPlayer(event.target);
           },
         },
       });
-      setPlayer(newPlayer);
     };
 
     return () => {
@@ -146,8 +149,8 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         player?.loadVideoById({
           videoId: song.youtubeId,
           startSeconds: 0,
-          suggestedQuality: "medium",
         });
+        player?.playVideo();
         setCurrentlyPlaying(song.id);
       } catch (error) {
         console.error("Error playing video:", error);

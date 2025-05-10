@@ -212,7 +212,9 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div
+      className={`min-h-screen ${isDarkMode ? "bg-gray-900" : "bg-gray-100"}`}
+    >
       <nav className={`${isDarkMode ? "bg-gray-800" : "bg-white"} shadow-sm`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
@@ -241,12 +243,12 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div
-          className={`min-h-screen ${
-            isDarkMode ? "bg-gray-900" : "bg-gray-50"
-          }`}
-        >
+      <main
+        className={`max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 ${
+          isDarkMode ? "bg-gray-900" : "bg-gray-50"
+        }`}
+      >
+        <div className="min-h-screen">
           <div id="youtube-player" className="hidden"></div>
 
           {/* Header Section */}

@@ -216,12 +216,41 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
   return (
     <div
-      className={`min-h-screen ${isDarkMode ? "bg-gray-900" : "bg-gray-100"}`}
+      className={`min-h-screen ${
+        isDarkMode
+          ? "bg-gray-900"
+          : "bg-gradient-to-br from-indigo-100 to-purple-100"
+      }`}
     >
-      <nav className={`${isDarkMode ? "bg-gray-800" : "bg-white"} shadow-sm`}>
+      <nav
+        className={`${
+          isDarkMode ? "bg-gray-800" : "bg-white/80 backdrop-blur-sm"
+        } shadow-sm`}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex items-center">
+            <div className="flex items-center space-x-3">
+              <div
+                className={`p-2 rounded-lg ${
+                  isDarkMode ? "bg-indigo-900/50" : "bg-indigo-50"
+                }`}
+              >
+                <svg
+                  className={`w-6 h-6 ${
+                    isDarkMode ? "text-indigo-400" : "text-indigo-600"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                  />
+                </svg>
+              </div>
               <h1
                 className={`text-xl font-semibold ${
                   isDarkMode ? "text-white" : "text-gray-900"
@@ -230,14 +259,53 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 Welcome, {user.username}
               </h1>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  isDarkMode
+                    ? "bg-gray-700 text-yellow-300 hover:bg-gray-600"
+                    : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                }`}
+                aria-label="Toggle dark mode"
+              >
+                {isDarkMode ? (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                    />
+                  </svg>
+                )}
+              </button>
               <button
                 onClick={onLogout}
-                className={`ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
+                className={`px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white ${
                   isDarkMode
                     ? "bg-red-700 hover:bg-red-800 focus:ring-red-500"
                     : "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                } focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200`}
               >
                 Logout
               </button>
@@ -248,7 +316,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
       <main
         className={`max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 ${
-          isDarkMode ? "bg-gray-900" : "bg-gray-50"
+          isDarkMode ? "bg-gray-900" : "bg-transparent"
         }`}
       >
         <div className="min-h-screen">
@@ -257,7 +325,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           {/* Header Section */}
           <header
             className={`${
-              isDarkMode ? "bg-gray-800" : "bg-white"
+              isDarkMode ? "bg-gray-800" : "bg-white/80 backdrop-blur-sm"
             } shadow-md border-b ${
               isDarkMode ? "border-gray-700" : "border-gray-200"
             }`}
@@ -306,90 +374,6 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                 </div>
                 <div className="flex items-center space-x-4">
                   <button
-                    onClick={() => setIsDarkMode(!isDarkMode)}
-                    className={`p-2 rounded-lg transition-all duration-200 ${
-                      isDarkMode
-                        ? "bg-gray-700 text-yellow-300 hover:bg-gray-600"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    aria-label="Toggle dark mode"
-                  >
-                    {isDarkMode ? (
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-                        />
-                      </svg>
-                    ) : (
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-                        />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Bottom Bar */}
-              <div
-                className={`py-3 flex items-center justify-between border-t ${
-                  isDarkMode ? "border-gray-700" : "border-gray-200"
-                }`}
-              >
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className={`w-5 h-5 ${
-                        isDarkMode ? "text-gray-400" : "text-gray-500"
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                    <h2
-                      className={`text-lg font-medium ${
-                        isDarkMode ? "text-white" : "text-gray-900"
-                      }`}
-                    >
-                      Welcome, {user.username}!
-                    </h2>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      isDarkMode
-                        ? "bg-indigo-900/50 text-indigo-200"
-                        : "bg-indigo-100 text-indigo-700"
-                    }`}
-                  >
-                    {songs.length} Songs
-                  </span>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <button
                     onClick={() => setShowAddSongModal(true)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                       isDarkMode
@@ -435,6 +419,49 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                     </svg>
                     <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
                   </button>
+                </div>
+              </div>
+
+              {/* Bottom Bar */}
+              <div
+                className={`py-3 flex items-center justify-between border-t ${
+                  isDarkMode ? "border-gray-700" : "border-gray-200"
+                }`}
+              >
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <svg
+                      className={`w-5 h-5 ${
+                        isDarkMode ? "text-gray-400" : "text-gray-500"
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                    <h2
+                      className={`text-lg font-medium ${
+                        isDarkMode ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      Welcome, {user.username}!
+                    </h2>
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      isDarkMode
+                        ? "bg-indigo-900/50 text-indigo-200"
+                        : "bg-indigo-100 text-indigo-700"
+                    }`}
+                  >
+                    {songs.length} Songs
+                  </span>
                 </div>
               </div>
             </div>

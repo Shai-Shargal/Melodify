@@ -1,19 +1,36 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import { useState } from "react";
-import { User } from "./types/index";
+import { User } from "./types";
 import Login from "./components/Login.tsx";
 import Register from "./components/Register.tsx";
 import Dashboard from "./components/Dashboard.tsx";
 import PlaylistView from "./components/PlaylistView.tsx";
 
 function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    // Check localStorage for user data on initial load
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
+  // Update localStorage when user changes
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    } else {
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+    }
+  }, [user]);
+
+  const handleLogout = () => {
+    setUser(null);
+  };
 
   return (
     <Router>
@@ -38,13 +55,21 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              user ? <Dashboard user={user} /> : <Navigate to="/login" />
+              user ? (
+                <Dashboard user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
             }
           />
           <Route
             path="/playlist/:id"
             element={
-              user ? <PlaylistView user={user} /> : <Navigate to="/login" />
+              user ? (
+                <PlaylistView user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
             }
           />
           <Route path="/" element={<Navigate to="/dashboard" />} />

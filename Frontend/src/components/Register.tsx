@@ -1,29 +1,46 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { User } from "../types";
+import { userApi } from "../services/api";
 
 interface RegisterProps {
   setUser: (user: User) => void;
 }
 
 const Register = ({ setUser }: RegisterProps) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
     if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
-    // For demo purposes, we'll just create a mock user
-    setUser({
-      id: "1",
-      email,
-      username,
-    });
+
+    try {
+      const userData = await userApi.register({
+        email,
+        name: username,
+        password,
+      });
+
+      setUser({
+        id: userData.id,
+        email: userData.email,
+        username: userData.name,
+      });
+
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Registration failed");
+    }
   };
 
   return (
@@ -43,6 +60,14 @@ const Register = ({ setUser }: RegisterProps) => {
             </Link>
           </p>
         </div>
+        {error && (
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

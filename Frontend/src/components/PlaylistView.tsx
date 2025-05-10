@@ -5,9 +5,10 @@ import { mockSongs } from "../data/mockSongs";
 
 interface PlaylistViewProps {
   user: User;
+  onLogout: () => void;
 }
 
-const PlaylistView = ({ user }: PlaylistViewProps) => {
+const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
@@ -83,7 +84,25 @@ const PlaylistView = ({ user }: PlaylistViewProps) => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <nav className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold">Playlist View</h1>
+            </div>
+            <div className="flex items-center">
+              <button
+                onClick={onLogout}
+                className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-4">
@@ -151,7 +170,7 @@ const PlaylistView = ({ user }: PlaylistViewProps) => {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 };

@@ -1,23 +1,43 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { User } from "../types";
+import { Link, useNavigate } from "react-router-dom";
+import { User, LoginResponse } from "../types";
+import { userApi } from "../services/api";
 
 interface LoginProps {
   setUser: (user: User) => void;
 }
 
 const Login = ({ setUser }: LoginProps) => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // For demo purposes, we'll just create a mock user
-    setUser({
-      id: "1",
-      email,
-      username: email.split("@")[0],
-    });
+    setError("");
+
+    try {
+      const response = (await userApi.login({
+        email,
+        password,
+      })) as LoginResponse;
+
+      setUser({
+        id: response.user.id,
+        email: response.user.email,
+        username: response.user.name,
+      });
+
+      // Store the token in localStorage
+      localStorage.setItem("token", response.token);
+
+      navigate("/dashboard");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Invalid email or password"
+      );
+    }
   };
 
   return (
@@ -37,6 +57,14 @@ const Login = ({ setUser }: LoginProps) => {
             </Link>
           </p>
         </div>
+        {error && (
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px">
             <div>

@@ -4,6 +4,19 @@ export interface User {
   username: string;
 }
 
+export interface ApiUser {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LoginResponse {
+  user: ApiUser;
+  token: string;
+}
+
 export interface Song {
   id: string;
   title: string;

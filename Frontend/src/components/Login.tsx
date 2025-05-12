@@ -50,20 +50,12 @@ const Login = ({ setUser }: LoginProps) => {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="p-3 rounded-full bg-indigo-600">
-              <svg
-                className="w-12 h-12 text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-                />
-              </svg>
+            <div className="p-3 rounded-full bg-white border-4 border-black">
+              <img
+                src="/Assets/music-svgrepo-com.svg"
+                alt="Melodify Logo"
+                className="w-12 h-12"
+              />
             </div>
           </div>
           <h1 className="mt-6 text-4xl font-extrabold text-gray-900">

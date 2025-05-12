@@ -32,7 +32,7 @@ Melodify is a modern music application that helps you discover, organize, and en
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/Melodify.git
+git clone https://github.com/Shai-Shargal/Melodify.git
 cd Melodify
 ```
 

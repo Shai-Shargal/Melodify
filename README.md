@@ -18,13 +18,24 @@ Melodify is a modern music application that helps you discover, organize, and en
   - Features a modern UI with dark mode support
   - Includes YouTube integration and music player
   - See [Frontend README](Frontend/README.md) for more details
+- `Backend/` - Server-side application
+  - Handles API requests and data management
+  - Manages YouTube API integration
+  - See [Backend README](Backend/README.md) for more details
 
 ## Tech Stack
 
 - **Frontend:**
+
   - React
   - TypeScript
   - Tailwind CSS
+  - YouTube API Integration
+
+- **Backend:**
+  - Node.js
+  - Express
+  - MongoDB
   - YouTube API Integration
 
 ## Getting Started
@@ -32,38 +43,30 @@ Melodify is a modern music application that helps you discover, organize, and en
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/Melodify.git
+git clone https://github.com/Shai-Shargal/Melodify.git
 cd Melodify
 ```
 
-2. Navigate to the Frontend directory:
+2. Set up the Backend:
 
 ```bash
-cd Frontend
-```
-
-3. Install dependencies:
-
-```bash
+cd Backend
 npm install
-```
-
-4. Start the development server:
-
-```bash
 npm run dev
 ```
 
-5. Open your browser and visit `http://localhost:3000`
+3. Set up the Frontend (in a new terminal):
 
-## Contributing
+```bash
+cd Frontend
+npm install
+npm run dev
+```
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+4. Open your browser and visit `http://localhost:3000`
 
-## About Me
+## Environment Variables
 
-Want to know more about me? Check out my [personal README](Frontend/ABOUT_ME.md)!
+### Backend
 
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+Create a `.env` file in the Backend directory with:

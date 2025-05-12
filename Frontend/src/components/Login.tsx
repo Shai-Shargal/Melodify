@@ -29,7 +29,7 @@ const Login = ({ setUser }: LoginProps) => {
         username: response.user.name,
       });
 
-      // Store the token in localStorage
+      // Store the token in localStorage xd
       localStorage.setItem("token", response.token);
 
       navigate("/dashboard");

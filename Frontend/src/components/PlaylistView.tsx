@@ -29,8 +29,13 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   const initializePlayer = useCallback(() => {
-    if (window.YT && window.YT.Player) {
-      console.log("Initializing YouTube player...");
+    console.log("Initializing YouTube player...");
+    if (!window.YT) {
+      console.error("YouTube API not loaded");
+      return;
+    }
+
+    try {
       const newPlayer = new window.YT.Player("youtube-player", {
         height: "0",
         width: "0",
@@ -75,28 +80,42 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
           },
         },
       });
-    } else {
-      console.error("YouTube API not loaded");
+    } catch (error) {
+      console.error("Error initializing player:", error);
+      setError("Failed to initialize player");
     }
   }, []);
 
   useEffect(() => {
-    // Load YouTube IFrame API
-    if (!window.YT) {
+    let isMounted = true;
+
+    const loadYouTubeAPI = () => {
+      if (window.YT) {
+        console.log("YouTube API already loaded");
+        initializePlayer();
+        return;
+      }
+
+      console.log("Loading YouTube API...");
       const tag = document.createElement("script");
       tag.src = "https://www.youtube.com/iframe_api";
       const firstScriptTag = document.getElementsByTagName("script")[0];
       firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
 
       window.onYouTubeIframeAPIReady = () => {
-        initializePlayer();
+        console.log("YouTube API Ready callback");
+        if (isMounted) {
+          initializePlayer();
+        }
       };
-    } else {
-      initializePlayer();
-    }
+    };
+
+    loadYouTubeAPI();
 
     return () => {
+      isMounted = false;
       if (player) {
+        console.log("Destroying player");
         player.destroy();
       }
     };
@@ -182,8 +201,9 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
         return;
       }
 
-      if (!isPlayerReady) {
-        console.error("Player not ready");
+      if (!isPlayerReady || !player) {
+        console.error("Player not ready, initializing...");
+        initializePlayer();
         return;
       }
 
@@ -191,7 +211,7 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
         // If the same song is clicked, stop it
         try {
           console.log("Pausing current song");
-          player?.pauseVideo();
+          player.pauseVideo();
           setCurrentlyPlaying(null);
         } catch (error) {
           console.error("Error pausing video:", error);
@@ -200,12 +220,12 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
         // If a different song is clicked, play it
         try {
           console.log("Loading and playing new song:", song.youtubeId);
-          player?.loadVideoById({
+          player.loadVideoById({
             videoId: song.youtubeId,
             startSeconds: 0,
           });
-          player?.setVolume(100);
-          player?.playVideo();
+          player.setVolume(100);
+          player.playVideo();
           setCurrentlyPlaying(song.id);
           setCurrentSongIndex(index);
         } catch (error) {
@@ -215,7 +235,7 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
         }
       }
     },
-    [currentlyPlaying, isPlayerReady, player]
+    [currentlyPlaying, isPlayerReady, player, initializePlayer]
   );
 
   const handleNext = useCallback(() => {

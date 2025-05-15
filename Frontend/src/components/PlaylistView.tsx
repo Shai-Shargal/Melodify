@@ -30,6 +30,7 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
 
   const initializePlayer = useCallback(() => {
     if (window.YT && window.YT.Player) {
+      console.log("Initializing YouTube player...");
       const newPlayer = new window.YT.Player("youtube-player", {
         height: "0",
         width: "0",
@@ -55,6 +56,7 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
         },
         events: {
           onStateChange: (event: any) => {
+            console.log("Player state changed:", event.data);
             if (event.data === window.YT.PlayerState.ENDED) {
               handleNext();
             }
@@ -73,6 +75,8 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
           },
         },
       });
+    } else {
+      console.error("YouTube API not loaded");
     }
   }, []);
 
@@ -169,11 +173,24 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
 
   const handlePlay = useCallback(
     (song: Song, index: number) => {
-      if (!song.youtubeId || !isPlayerReady) return;
+      console.log("Attempting to play song:", song);
+      console.log("Player ready:", isPlayerReady);
+      console.log("Current player state:", player?.getPlayerState?.());
+
+      if (!song.youtubeId) {
+        console.error("No YouTube ID for song:", song);
+        return;
+      }
+
+      if (!isPlayerReady) {
+        console.error("Player not ready");
+        return;
+      }
 
       if (currentlyPlaying === song.id) {
         // If the same song is clicked, stop it
         try {
+          console.log("Pausing current song");
           player?.pauseVideo();
           setCurrentlyPlaying(null);
         } catch (error) {
@@ -182,6 +199,7 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
       } else {
         // If a different song is clicked, play it
         try {
+          console.log("Loading and playing new song:", song.youtubeId);
           player?.loadVideoById({
             videoId: song.youtubeId,
             startSeconds: 0,
@@ -478,6 +496,17 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
           )}
         </div>
       </main>
+
+      {/* Add debug information */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-0 right-0 bg-black bg-opacity-75 text-white p-4 m-4 rounded-lg text-sm">
+          <p>Player Ready: {isPlayerReady ? "Yes" : "No"}</p>
+          <p>Currently Playing: {currentlyPlaying || "None"}</p>
+          <p>Current Index: {currentSongIndex}</p>
+          {error && <p className="text-red-400">Error: {error}</p>}
+        </div>
+      )}
+
       <div id="youtube-player" className="hidden"></div>
     </div>
   );

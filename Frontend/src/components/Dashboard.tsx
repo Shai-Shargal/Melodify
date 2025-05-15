@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   User,
@@ -40,6 +40,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState(false);
   const [selectedSong, setSelectedSong] = useState<Song | null>(null);
   const [newPlaylistName, setNewPlaylistName] = useState("");
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -53,14 +54,8 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     fetchSongs();
   }, []);
 
-  useEffect(() => {
-    // Load YouTube IFrame API
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName("script")[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-
-    window.onYouTubeIframeAPIReady = () => {
+  const initializePlayer = useCallback(() => {
+    if (window.YT && window.YT.Player) {
       const newPlayer = new window.YT.Player("youtube-player", {
         height: "0",
         width: "0",
@@ -97,18 +92,37 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           },
           onReady: (event: any) => {
             console.log("YouTube Player Ready");
-            setPlayer(event.target);
+            const player = event.target;
+            player.setVolume(100);
+            setPlayer(player);
+            setIsPlayerReady(true);
           },
         },
       });
-    };
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load YouTube IFrame API
+    if (!window.YT) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+      window.onYouTubeIframeAPIReady = () => {
+        initializePlayer();
+      };
+    } else {
+      initializePlayer();
+    }
 
     return () => {
       if (player) {
         player.destroy();
       }
     };
-  }, []);
+  }, [initializePlayer]);
 
   useEffect(() => {
     const fetchPlaylists = async () => {
@@ -173,33 +187,37 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     );
   };
 
-  const handlePlay = (song: Song) => {
-    if (!song.youtubeId) return;
+  const handlePlay = useCallback(
+    (song: Song) => {
+      if (!song.youtubeId || !isPlayerReady) return;
 
-    if (currentlyPlaying === song.id) {
-      // If the same song is clicked, stop it
-      try {
-        player?.pauseVideo();
-        setCurrentlyPlaying(null);
-      } catch (error) {
-        console.error("Error pausing video:", error);
+      if (currentlyPlaying === song.id) {
+        // If the same song is clicked, stop it
+        try {
+          player?.pauseVideo();
+          setCurrentlyPlaying(null);
+        } catch (error) {
+          console.error("Error pausing video:", error);
+        }
+      } else {
+        // If a different song is clicked, play it
+        try {
+          player?.loadVideoById({
+            videoId: song.youtubeId,
+            startSeconds: 0,
+          });
+          player?.setVolume(100);
+          player?.playVideo();
+          setCurrentlyPlaying(song.id);
+        } catch (error) {
+          console.error("Error playing video:", error);
+          setCurrentlyPlaying(null);
+          setError("Failed to play video. Please try again.");
+        }
       }
-    } else {
-      // If a different song is clicked, play it
-      try {
-        player?.loadVideoById({
-          videoId: song.youtubeId,
-          startSeconds: 0,
-        });
-        player?.playVideo();
-        setCurrentlyPlaying(song.id);
-      } catch (error) {
-        console.error("Error playing video:", error);
-        setCurrentlyPlaying(null);
-        setError("Failed to play video. Please try again.");
-      }
-    }
-  };
+    },
+    [currentlyPlaying, isPlayerReady, player]
+  );
 
   const extractYouTubeId = (url: string): string | null => {
     const regExp =

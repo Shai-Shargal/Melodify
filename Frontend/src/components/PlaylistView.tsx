@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { User, Playlist, Song } from "../types";
 import { playlistApi } from "../services/api";
@@ -6,6 +6,13 @@ import { playlistApi } from "../services/api";
 interface PlaylistViewProps {
   user: User;
   onLogout: () => void;
+}
+
+declare global {
+  interface Window {
+    YT: any;
+    onYouTubeIframeAPIReady: () => void;
+  }
 }
 
 const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
@@ -16,6 +23,80 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [player, setPlayer] = useState<any>(null);
+  const [currentSongIndex, setCurrentSongIndex] = useState<number>(-1);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
+
+  const initializePlayer = useCallback(() => {
+    if (window.YT && window.YT.Player) {
+      const newPlayer = new window.YT.Player("youtube-player", {
+        height: "0",
+        width: "0",
+        videoId: "",
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          origin: window.location.origin,
+          enablejsapi: 1,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+          fs: 0,
+          iv_load_policy: 3,
+          showinfo: 0,
+          disablekb: 1,
+          cc_load_policy: 0,
+          host: "https://www.youtube-nocookie.com",
+          privacy: 1,
+          noCookie: true,
+          preventFullScreen: true,
+          widget_referrer: window.location.origin,
+        },
+        events: {
+          onStateChange: (event: any) => {
+            if (event.data === window.YT.PlayerState.ENDED) {
+              handleNext();
+            }
+          },
+          onError: (event: any) => {
+            console.error("YouTube Player Error:", event.data);
+            setCurrentlyPlaying(null);
+            setError("Failed to play video. Please try again.");
+          },
+          onReady: (event: any) => {
+            console.log("YouTube Player Ready");
+            const player = event.target;
+            player.setVolume(100);
+            setPlayer(player);
+            setIsPlayerReady(true);
+          },
+        },
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    // Load YouTube IFrame API
+    if (!window.YT) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+
+      window.onYouTubeIframeAPIReady = () => {
+        initializePlayer();
+      };
+    } else {
+      initializePlayer();
+    }
+
+    return () => {
+      if (player) {
+        player.destroy();
+      }
+    };
+  }, [initializePlayer]);
 
   useEffect(() => {
     const fetchPlaylist = async () => {
@@ -86,18 +167,55 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
     }
   };
 
-  const handleAddSong = (song: Song) => {
-    if (!playlist) return;
+  const handlePlay = useCallback(
+    (song: Song, index: number) => {
+      if (!song.youtubeId || !isPlayerReady) return;
 
-    setPlaylist((prev) =>
-      prev
-        ? {
-            ...prev,
-            songs: [...prev.songs, song],
-          }
-        : null
-    );
-  };
+      if (currentlyPlaying === song.id) {
+        // If the same song is clicked, stop it
+        try {
+          player?.pauseVideo();
+          setCurrentlyPlaying(null);
+        } catch (error) {
+          console.error("Error pausing video:", error);
+        }
+      } else {
+        // If a different song is clicked, play it
+        try {
+          player?.loadVideoById({
+            videoId: song.youtubeId,
+            startSeconds: 0,
+          });
+          player?.setVolume(100);
+          player?.playVideo();
+          setCurrentlyPlaying(song.id);
+          setCurrentSongIndex(index);
+        } catch (error) {
+          console.error("Error playing video:", error);
+          setCurrentlyPlaying(null);
+          setError("Failed to play video. Please try again.");
+        }
+      }
+    },
+    [currentlyPlaying, isPlayerReady, player]
+  );
+
+  const handleNext = useCallback(() => {
+    if (!playlist || currentSongIndex === -1) return;
+
+    const nextIndex = (currentSongIndex + 1) % playlist.songs.length;
+    const nextSong = playlist.songs[nextIndex];
+    handlePlay(nextSong, nextIndex);
+  }, [playlist, currentSongIndex, handlePlay]);
+
+  const handlePrevious = useCallback(() => {
+    if (!playlist || currentSongIndex === -1) return;
+
+    const prevIndex =
+      (currentSongIndex - 1 + playlist.songs.length) % playlist.songs.length;
+    const prevSong = playlist.songs[prevIndex];
+    handlePlay(prevSong, prevIndex);
+  }, [playlist, currentSongIndex, handlePlay]);
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -170,10 +288,117 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
             </button>
           </div>
 
+          {/* Music Player Controls */}
+          <div className="bg-white shadow rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-center space-x-6">
+              <button
+                onClick={handlePrevious}
+                className="p-2 rounded-full hover:bg-gray-100"
+                disabled={!playlist.songs.length}
+              >
+                <svg
+                  className="w-6 h-6 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 19l-7-7 7-7m8 14l-7-7 7-7"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  if (currentSongIndex !== -1) {
+                    handlePlay(
+                      playlist.songs[currentSongIndex],
+                      currentSongIndex
+                    );
+                  }
+                }}
+                className="p-3 rounded-full bg-indigo-600 text-white hover:bg-indigo-700"
+                disabled={!playlist.songs.length}
+              >
+                {currentlyPlaying ? (
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-8 h-8"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={handleNext}
+                className="p-2 rounded-full hover:bg-gray-100"
+                disabled={!playlist.songs.length}
+              >
+                <svg
+                  className="w-6 h-6 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 5l7 7-7 7M5 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
+            {currentlyPlaying && currentSongIndex !== -1 && (
+              <div className="mt-4 text-center">
+                <p className="text-lg font-medium text-gray-900">
+                  {playlist.songs[currentSongIndex].title}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {playlist.songs[currentSongIndex].artist}
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="bg-white shadow overflow-hidden sm:rounded-md">
             <ul className="divide-y divide-gray-200">
-              {playlist.songs.map((song) => (
-                <li key={song.id} className="px-6 py-4">
+              {playlist.songs.map((song, index) => (
+                <li
+                  key={song.id}
+                  className={`px-6 py-4 ${
+                    currentlyPlaying === song.id ? "bg-indigo-50" : ""
+                  }`}
+                >
                   <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
@@ -181,12 +406,59 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
                       </p>
                       <p className="text-sm text-gray-500">{song.artist}</p>
                     </div>
-                    <button
-                      onClick={() => handleRemoveSong(song.id)}
-                      className="ml-4 text-red-600 hover:text-red-500"
-                    >
-                      Remove
-                    </button>
+                    <div className="flex items-center space-x-4">
+                      <button
+                        onClick={() => handlePlay(song, index)}
+                        className={`p-2 rounded-full transition-colors duration-200 ${
+                          currentlyPlaying === song.id
+                            ? "bg-indigo-100 text-indigo-600"
+                            : "text-gray-400 hover:text-indigo-600"
+                        }`}
+                        disabled={!song.youtubeId}
+                      >
+                        {currentlyPlaying === song.id ? (
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                            />
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleRemoveSong(song.id)}
+                        className="text-red-600 hover:text-red-500"
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </li>
               ))}
@@ -206,6 +478,7 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
           )}
         </div>
       </main>
+      <div id="youtube-player" className="hidden"></div>
     </div>
   );
 };

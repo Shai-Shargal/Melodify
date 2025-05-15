@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Song, Playlist } from "../types";
 
 const API_BASE_URL = "http://localhost:3000/api";
 
@@ -42,19 +43,19 @@ export const userApi = {
 export const songApi = {
   getAll: async () => {
     const response = await api.get("/songs");
-    return response.data;
+    return response.data as Song[];
   },
   create: async (songData: {
     title: string;
     artist: string;
     youtubeId: string;
     thumbnail: string;
-    duration: number;
+    duration: string;
     genre: string;
     userId: string;
   }) => {
     const response = await api.post("/songs", songData);
-    return response.data;
+    return response.data as Song;
   },
 };
 
@@ -62,7 +63,11 @@ export const songApi = {
 export const playlistApi = {
   getAll: async () => {
     const response = await api.get("/playlists");
-    return response.data;
+    return response.data as Playlist[];
+  },
+  getById: async (id: string) => {
+    const response = await api.get(`/playlists/${id}`);
+    return response.data as Playlist;
   },
   create: async (playlistData: {
     name: string;
@@ -71,6 +76,29 @@ export const playlistApi = {
     songs: string[];
   }) => {
     const response = await api.post("/playlists", playlistData);
+    return response.data as Playlist;
+  },
+  update: async (
+    id: string,
+    playlistData: { name: string; description?: string }
+  ) => {
+    const response = await api.put(`/playlists/${id}`, playlistData);
+    return response.data as Playlist;
+  },
+  addSong: async (playlistId: string, songId: string) => {
+    const response = await api.post(`/playlists/${playlistId}/songs`, {
+      songId,
+    });
+    return response.data as Playlist;
+  },
+  removeSong: async (playlistId: string, songId: string) => {
+    const response = await api.delete(
+      `/playlists/${playlistId}/songs/${songId}`
+    );
+    return response.data as Playlist;
+  },
+  delete: async (id: string) => {
+    const response = await api.delete(`/playlists/${id}`);
     return response.data;
   },
 };

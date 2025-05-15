@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { User, Playlist, Song } from "../types";
-import { mockSongs } from "../data/mockSongs";
+import { playlistApi } from "../services/api";
 
 interface PlaylistViewProps {
   user: User;
@@ -14,55 +14,76 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
   const [playlist, setPlaylist] = useState<Playlist | null>(null);
   const [playlistName, setPlaylistName] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // For demo purposes, create a mock playlist
-    if (id === "new") {
-      setPlaylist({
-        id: "new",
-        name: "New Playlist",
-        songs: [],
-        userId: user.id,
-      });
-      setPlaylistName("New Playlist");
-      setIsEditing(true);
-    } else {
-      // In a real app, fetch the playlist from an API
-      setPlaylist({
-        id: id || "1",
-        name: "My Playlist",
-        songs: mockSongs.slice(0, 5),
-        userId: user.id,
-      });
-      setPlaylistName("My Playlist");
-    }
-  }, [id, user.id]);
+    const fetchPlaylist = async () => {
+      try {
+        setIsLoading(true);
+        const data = await playlistApi.getById(id || "");
+        setPlaylist(data);
+        setPlaylistName(data.name);
+      } catch (error) {
+        console.error("Failed to fetch playlist:", error);
+        setError("Failed to load playlist");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleSavePlaylist = () => {
+    if (id) {
+      fetchPlaylist();
+    }
+  }, [id]);
+
+  const handleSavePlaylist = async () => {
     if (!playlist) return;
 
-    setPlaylist((prev) =>
-      prev
-        ? {
-            ...prev,
-            name: playlistName,
-          }
-        : null
-    );
-    setIsEditing(false);
+    try {
+      const updatedPlaylist = await playlistApi.update(playlist.id, {
+        name: playlistName,
+        description: playlist.description || "",
+      });
+      setPlaylist(updatedPlaylist);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Failed to update playlist:", error);
+      setError("Failed to update playlist name");
+    }
   };
 
-  const handleRemoveSong = (songId: string) => {
+  const handleDeletePlaylist = async () => {
     if (!playlist) return;
 
-    setPlaylist((prev) =>
-      prev
-        ? {
-            ...prev,
-            songs: prev.songs.filter((song) => song.id !== songId),
-          }
-        : null
-    );
+    if (window.confirm("Are you sure you want to delete this playlist?")) {
+      try {
+        await playlistApi.delete(playlist.id);
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Failed to delete playlist:", error);
+        setError("Failed to delete playlist");
+      }
+    }
+  };
+
+  const handleRemoveSong = async (songId: string) => {
+    if (!playlist) return;
+
+    try {
+      await playlistApi.removeSong(playlist.id, songId);
+      setPlaylist((prev) =>
+        prev
+          ? {
+              ...prev,
+              songs: prev.songs.filter((song) => song.id !== songId),
+            }
+          : null
+      );
+    } catch (error) {
+      console.error("Failed to remove song:", error);
+      setError("Failed to remove song from playlist");
+    }
   };
 
   const handleAddSong = (song: Song) => {
@@ -78,8 +99,16 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
     );
   };
 
-  if (!playlist) {
+  if (isLoading) {
     return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  if (!playlist) {
+    return <div>Playlist not found</div>;
   }
 
   return (
@@ -90,10 +119,16 @@ const PlaylistView = ({ user, onLogout }: PlaylistViewProps) => {
             <div className="flex items-center">
               <h1 className="text-xl font-semibold">Playlist View</h1>
             </div>
-            <div className="flex items-center">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleDeletePlaylist}
+                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Delete Playlist
+              </button>
               <button
                 onClick={onLogout}
-                className="ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 Logout
               </button>

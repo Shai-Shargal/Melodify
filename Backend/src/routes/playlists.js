@@ -95,4 +95,36 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+// Add song to playlist
+router.post("/:id/songs", async (req, res) => {
+  try {
+    const { songId } = req.body;
+    console.log("Adding song to playlist:", {
+      playlistId: req.params.id,
+      songId: songId,
+      body: req.body,
+    });
+
+    if (!songId) {
+      return res.status(400).json({ error: "songId is required" });
+    }
+
+    const playlist = await prisma.playlist.update({
+      where: { id: req.params.id },
+      data: {
+        songs: {
+          connect: { id: songId },
+        },
+      },
+      include: {
+        songs: true,
+      },
+    });
+    res.json(playlist);
+  } catch (error) {
+    console.error("Error adding song to playlist:", error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = router;

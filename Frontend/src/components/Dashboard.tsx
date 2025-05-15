@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   User,
   FilterOptions,
@@ -6,8 +7,9 @@ import {
   Genre,
   EmotionalState,
   Purpose,
+  Playlist,
 } from "../types";
-import { mockSongs } from "../data/mockSongs";
+import { playlistApi, songApi } from "../services/api";
 
 interface DashboardProps {
   user: User;
@@ -22,8 +24,9 @@ declare global {
 }
 
 const Dashboard = ({ user, onLogout }: DashboardProps) => {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<FilterOptions>({});
-  const [songs, setSongs] = useState<Song[]>(mockSongs);
+  const [songs, setSongs] = useState<Song[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
   const [player, setPlayer] = useState<any>(null);
@@ -32,6 +35,23 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [showCreatePlaylistModal, setShowCreatePlaylistModal] = useState(false);
+  const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState(false);
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const data = await songApi.getAll();
+        setSongs(data);
+      } catch (error) {
+        console.error("Failed to fetch songs:", error);
+      }
+    };
+    fetchSongs();
+  }, []);
 
   useEffect(() => {
     // Load YouTube IFrame API
@@ -90,6 +110,18 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      try {
+        const data = (await playlistApi.getAll()) as Playlist[];
+        setPlaylists(data);
+      } catch (error) {
+        console.error("Failed to fetch playlists:", error);
+      }
+    };
+    fetchPlaylists();
+  }, []);
+
   const handleFilterChange = (
     key: keyof FilterOptions,
     value: string | number
@@ -97,25 +129,34 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     setFilters({});
-    setSongs(mockSongs);
+    try {
+      const data = await songApi.getAll();
+      setSongs(data);
+    } catch (error) {
+      console.error("Failed to fetch songs:", error);
+    }
   };
 
-  const handleGeneratePlaylist = () => {
-    let filteredSongs = [...mockSongs];
+  const handleGeneratePlaylist = async () => {
+    try {
+      let filteredSongs = await songApi.getAll();
 
-    if (filters.genre) {
-      filteredSongs = filteredSongs.filter(
-        (song) => song.genre === filters.genre
-      );
+      if (filters.genre) {
+        filteredSongs = filteredSongs.filter(
+          (song) => song.genre === filters.genre
+        );
+      }
+
+      if (filters.numberOfSongs) {
+        filteredSongs = filteredSongs.slice(0, filters.numberOfSongs);
+      }
+
+      setSongs(filteredSongs);
+    } catch (error) {
+      console.error("Failed to generate playlist:", error);
     }
-
-    if (filters.numberOfSongs) {
-      filteredSongs = filteredSongs.slice(0, filters.numberOfSongs);
-    }
-
-    setSongs(filteredSongs);
   };
 
   const handleLike = (songId: string) => {
@@ -192,17 +233,16 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
 
       const videoData = await response.json();
 
-      // Create new song object with real data
-      const newSong: Song = {
-        id: Date.now().toString(),
+      // Create new song in the database
+      const newSong: Song = await songApi.create({
         title: videoData.title,
         artist: videoData.author_name,
-        genre: "Custom",
-        duration: "0:00", // We'll need to fetch this from YouTube API
         youtubeId: videoId,
         thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
-        isLiked: false,
-      };
+        duration: "0:00", // We'll need to fetch this from YouTube API
+        genre: "Custom",
+        userId: user.id,
+      });
 
       setSongs((prevSongs) => [...prevSongs, newSong]);
       setShowAddSongModal(false);
@@ -211,6 +251,43 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       setError(err instanceof Error ? err.message : "Failed to add song");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCreatePlaylist = async () => {
+    try {
+      const newPlaylist = (await playlistApi.create({
+        name: newPlaylistName,
+        description: "",
+        userId: user.id,
+        songs: [],
+      })) as Playlist;
+      setPlaylists([...playlists, newPlaylist]);
+      setShowCreatePlaylistModal(false);
+      setNewPlaylistName("");
+    } catch (error) {
+      console.error("Failed to create playlist:", error);
+    }
+  };
+
+  const handleAddToPlaylist = async (playlistId: string) => {
+    if (!selectedSong) return;
+
+    try {
+      console.log("Adding song to playlist:", {
+        playlistId,
+        songId: selectedSong.id,
+      });
+
+      await playlistApi.addSong(playlistId, selectedSong.id);
+      setShowAddToPlaylistModal(false);
+      setSelectedSong(null);
+
+      // Refresh playlists after adding song
+      const updatedPlaylists = (await playlistApi.getAll()) as Playlist[];
+      setPlaylists(updatedPlaylists);
+    } catch (error) {
+      console.error("Failed to add song to playlist:", error);
     }
   };
 
@@ -690,6 +767,78 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
               </div>
             )}
 
+            {/* Add Playlists Section */}
+            <div
+              className={`${
+                isDarkMode ? "bg-gray-800" : "bg-white/80 backdrop-blur-sm"
+              } rounded-xl shadow-lg p-6 mb-8`}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h2
+                  className={`text-lg font-semibold ${
+                    isDarkMode ? "text-white" : "text-gray-900"
+                  }`}
+                >
+                  Your Playlists
+                </h2>
+                <button
+                  onClick={() => setShowCreatePlaylistModal(true)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                    isDarkMode
+                      ? "bg-indigo-500 text-white hover:bg-indigo-600"
+                      : "bg-indigo-600 text-white hover:bg-indigo-700"
+                  }`}
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  <span>Create Playlist</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {playlists.map((playlist) => (
+                  <div
+                    key={playlist.id}
+                    className={`p-4 rounded-lg ${
+                      isDarkMode ? "bg-gray-700" : "bg-white"
+                    } shadow`}
+                  >
+                    <h3
+                      className={`font-medium ${
+                        isDarkMode ? "text-white" : "text-gray-900"
+                      }`}
+                    >
+                      {playlist.name}
+                    </h3>
+                    <p
+                      className={`text-sm ${
+                        isDarkMode ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      {playlist.songs.length} songs
+                    </p>
+                    <button
+                      onClick={() => navigate(`/playlist/${playlist.id}`)}
+                      className="mt-2 text-sm text-indigo-600 hover:text-indigo-500"
+                    >
+                      View Playlist
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Songs List */}
             <div
               className={`${
@@ -819,6 +968,19 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
                         >
                           ❤️
                         </button>
+                        <button
+                          onClick={() => {
+                            setSelectedSong(song);
+                            setShowAddToPlaylistModal(true);
+                          }}
+                          className={`text-sm font-medium ${
+                            isDarkMode
+                              ? "text-indigo-400 hover:text-indigo-300"
+                              : "text-indigo-600 hover:text-indigo-500"
+                          }`}
+                        >
+                          Add to Playlist
+                        </button>
                       </div>
                     </div>
                   </li>
@@ -828,6 +990,92 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           </main>
         </div>
       </main>
+
+      {/* Create Playlist Modal */}
+      {showCreatePlaylistModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div
+            className={`${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            } rounded-xl shadow-xl p-6 w-full max-w-md`}
+          >
+            <h3
+              className={`text-lg font-semibold mb-4 ${
+                isDarkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Create New Playlist
+            </h3>
+            <input
+              type="text"
+              value={newPlaylistName}
+              onChange={(e) => setNewPlaylistName(e.target.value)}
+              placeholder="Enter playlist name"
+              className={`w-full p-2 rounded-lg border ${
+                isDarkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300"
+              }`}
+            />
+            <div className="mt-4 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCreatePlaylistModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreatePlaylist}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-md"
+              >
+                Create
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add to Playlist Modal */}
+      {showAddToPlaylistModal && selectedSong && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div
+            className={`${
+              isDarkMode ? "bg-gray-800" : "bg-white"
+            } rounded-xl shadow-xl p-6 w-full max-w-md`}
+          >
+            <h3
+              className={`text-lg font-semibold mb-4 ${
+                isDarkMode ? "text-white" : "text-gray-900"
+              }`}
+            >
+              Add to Playlist
+            </h3>
+            <div className="space-y-2">
+              {playlists.map((playlist) => (
+                <button
+                  key={playlist.id}
+                  onClick={() => handleAddToPlaylist(playlist.id)}
+                  className={`w-full p-2 text-left rounded-lg ${
+                    isDarkMode
+                      ? "hover:bg-gray-700 text-white"
+                      : "hover:bg-gray-50 text-gray-900"
+                  }`}
+                >
+                  {playlist.name}
+                </button>
+              ))}
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setShowAddToPlaylistModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

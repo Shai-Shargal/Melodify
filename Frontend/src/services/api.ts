@@ -57,6 +57,10 @@ export const songApi = {
     const response = await api.post("/songs", songData);
     return response.data as Song;
   },
+  update: async (id: string, songData: Partial<Song>) => {
+    const response = await api.put(`/songs/${id}`, songData);
+    return response.data as Song;
+  },
 };
 
 // Playlist related API calls

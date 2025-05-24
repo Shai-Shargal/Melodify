@@ -181,10 +181,24 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     );
   };
 
-  const handleRating = (songId: string, rating: number) => {
-    setSongs((prev) =>
-      prev.map((song) => (song.id === songId ? { ...song, rating } : song))
-    );
+  const handleRating = async (songId: string, rating: number) => {
+    try {
+      // Update local state immediately for better UX
+      setSongs((prev) =>
+        prev.map((song) => (song.id === songId ? { ...song, rating } : song))
+      );
+
+      // Send update to backend
+      await songApi.update(songId, { rating });
+    } catch (error) {
+      console.error("Failed to update rating:", error);
+      // Optionally revert the local state if the update fails
+      setSongs((prev) =>
+        prev.map((song) =>
+          song.id === songId ? { ...song, rating: song.rating } : song
+        )
+      );
+    }
   };
 
   const handlePlay = useCallback(

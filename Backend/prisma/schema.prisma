@@ -15,9 +15,9 @@ datasource db {
 }
 
 model User {
-  id        String     @id @default(cuid())
+  id        String     @id @default(uuid())
   email     String     @unique
-  name      String?
+  name      String
   password  String
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
@@ -26,24 +26,26 @@ model User {
 }
 
 model Song {
-  id          String     @id @default(cuid())
-  title       String
-  artist      String
-  youtubeId   String     @unique
-  thumbnail   String?
-  duration    String?
-  genre       String?
-  rating      Int?       @default(0)
-  isLiked     Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  userId      String
-  user        User       @relation("UserSongs", fields: [userId], references: [id])
-  playlists   Playlist[] @relation("PlaylistSongs")
+  id             String     @id @default(uuid())
+  title          String
+  artist         String
+  youtubeId      String
+  thumbnail      String?
+  duration       String?
+  genre          String?
+  rating         Int?
+  isLiked        Boolean    @default(false)
+  purpose        String?
+  emotionalState String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  userId         String
+  user           User       @relation("UserSongs", fields: [userId], references: [id])
+  playlists      Playlist[] @relation("PlaylistSongs")
 }
 
 model Playlist {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
   createdAt   DateTime @default(now())

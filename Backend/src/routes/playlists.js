@@ -2,11 +2,18 @@ const express = require("express");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const auth = require("../middleware/auth");
+
+// Apply auth middleware to all routes
+router.use(auth);
 
 // Get all playlists
 router.get("/", async (req, res) => {
   try {
     const playlists = await prisma.playlist.findMany({
+      where: {
+        userId: req.userId,
+      },
       include: {
         user: true,
         songs: true,
@@ -14,6 +21,7 @@ router.get("/", async (req, res) => {
     });
     res.json(playlists);
   } catch (error) {
+    console.error("Error fetching playlists:", error);
     res.status(500).json({ error: error.message });
   }
 });

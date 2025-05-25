@@ -42,17 +42,23 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
-  useEffect(() => {
-    const fetchSongs = async () => {
-      try {
-        const data = await songApi.getAll();
-        setSongs(data);
-      } catch (error) {
-        console.error("Failed to fetch songs:", error);
-      }
-    };
-    fetchSongs();
-  }, []);
+  const fetchSongs = async () => {
+    try {
+      const songs = await songApi.getAll();
+      setSongs(songs);
+    } catch (error) {
+      console.error("Error fetching songs:", error);
+    }
+  };
+
+  const fetchPlaylists = async () => {
+    try {
+      const playlists = await playlistApi.getAll();
+      setPlaylists(playlists);
+    } catch (error) {
+      console.error("Error fetching playlists:", error);
+    }
+  };
 
   const initializePlayer = useCallback(() => {
     if (window.YT && window.YT.Player) {
@@ -125,14 +131,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   }, [initializePlayer]);
 
   useEffect(() => {
-    const fetchPlaylists = async () => {
-      try {
-        const data = (await playlistApi.getAll()) as Playlist[];
-        setPlaylists(data);
-      } catch (error) {
-        console.error("Failed to fetch playlists:", error);
-      }
-    };
+    fetchSongs();
     fetchPlaylists();
   }, []);
 
@@ -144,32 +143,37 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   const handleReset = async () => {
-    setFilters({});
     try {
-      const data = await songApi.getAll();
-      setSongs(data);
+      setIsLoading(true);
+      const songs = await songApi.getAll();
+      setSongs(songs);
+      setSelectedSong(null);
+      setNewPlaylistName("");
     } catch (error) {
-      console.error("Failed to fetch songs:", error);
+      console.error("Error resetting:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleGeneratePlaylist = async () => {
     try {
-      let filteredSongs = await songApi.getAll();
+      setIsLoading(true);
+      let songs = await songApi.getAll();
 
       if (filters.genre) {
-        filteredSongs = filteredSongs.filter(
-          (song) => song.genre === filters.genre
-        );
+        songs = songs.filter((song) => song.genre === filters.genre);
       }
 
       if (filters.numberOfSongs) {
-        filteredSongs = filteredSongs.slice(0, filters.numberOfSongs);
+        songs = songs.slice(0, filters.numberOfSongs);
       }
 
-      setSongs(filteredSongs);
+      setSongs(songs);
     } catch (error) {
-      console.error("Failed to generate playlist:", error);
+      console.error("Error generating playlist:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -306,6 +310,8 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
     if (!selectedSong) return;
 
     try {
+      setIsLoading(true);
+      const songs = await songApi.getAll();
       console.log("Adding song to playlist:", {
         playlistId,
         songId: selectedSong.id,
@@ -316,10 +322,12 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       setSelectedSong(null);
 
       // Refresh playlists after adding song
-      const updatedPlaylists = (await playlistApi.getAll()) as Playlist[];
+      const updatedPlaylists = await playlistApi.getAll();
       setPlaylists(updatedPlaylists);
     } catch (error) {
-      console.error("Failed to add song to playlist:", error);
+      console.error("Error adding to playlist:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 

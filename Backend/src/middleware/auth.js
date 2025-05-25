@@ -18,8 +18,10 @@ const auth = (req, res, next) => {
 
     // Add user from payload
     req.user = decoded;
+    req.userId = decoded.userId; // Add userId to request object
     next();
   } catch (error) {
+    console.error("Auth middleware error:", error);
     res.status(401).json({ error: "Token is not valid" });
   }
 };

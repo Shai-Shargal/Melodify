@@ -21,12 +21,14 @@ export interface Song {
   id: string;
   title: string;
   artist: string;
-  genre: string;
+  genre?: string;
   duration: string;
   rating?: number;
   isLiked: boolean;
   youtubeId?: string;
   thumbnail?: string;
+  purpose?: string;
+  emotionalState?: string;
 }
 
 export interface Playlist {
@@ -45,6 +47,7 @@ export interface FilterOptions {
 }
 
 export enum EmotionalState {
+  Unknown = "Unknown",
   Happy = "Happy",
   Sad = "Sad",
   Energetic = "Energetic",
@@ -53,6 +56,7 @@ export enum EmotionalState {
 }
 
 export enum Purpose {
+  Unknown = "Unknown",
   Study = "Study",
   Workout = "Workout",
   Chill = "Chill",
@@ -61,6 +65,7 @@ export enum Purpose {
 }
 
 export enum Genre {
+  Unknown = "Unknown",
   Pop = "Pop",
   Rock = "Rock",
   Classical = "Classical",

@@ -2,11 +2,18 @@ const express = require("express");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const auth = require("../middleware/auth");
+
+// Apply auth middleware to all routes
+router.use(auth);
 
 // Get all songs
 router.get("/", async (req, res) => {
   try {
     const songs = await prisma.song.findMany({
+      where: {
+        userId: req.userId,
+      },
       include: {
         user: true,
         playlists: true,
@@ -14,6 +21,7 @@ router.get("/", async (req, res) => {
     });
     res.json(songs);
   } catch (error) {
+    console.error("Error fetching songs:", error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -40,8 +48,17 @@ router.get("/:id", async (req, res) => {
 // Create new song
 router.post("/", async (req, res) => {
   try {
-    const { title, artist, youtubeId, thumbnail, duration, genre, userId } =
-      req.body;
+    const {
+      title,
+      artist,
+      youtubeId,
+      thumbnail,
+      duration,
+      genre,
+      purpose,
+      emotionalState,
+      userId,
+    } = req.body;
     const song = await prisma.song.create({
       data: {
         title,
@@ -50,6 +67,8 @@ router.post("/", async (req, res) => {
         thumbnail,
         duration,
         genre,
+        purpose,
+        emotionalState,
         userId,
       },
     });
@@ -62,6 +81,7 @@ router.post("/", async (req, res) => {
 // Update song
 router.put("/:id", async (req, res) => {
   try {
+    const { id } = req.params;
     const {
       title,
       artist,
@@ -69,11 +89,13 @@ router.put("/:id", async (req, res) => {
       thumbnail,
       duration,
       genre,
+      purpose,
+      emotionalState,
       rating,
       isLiked,
     } = req.body;
     const song = await prisma.song.update({
-      where: { id: req.params.id },
+      where: { id },
       data: {
         title,
         artist,
@@ -81,6 +103,8 @@ router.put("/:id", async (req, res) => {
         thumbnail,
         duration,
         genre,
+        purpose,
+        emotionalState,
         rating,
         isLiked,
       },

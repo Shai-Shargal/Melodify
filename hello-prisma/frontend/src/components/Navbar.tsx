@@ -17,6 +17,7 @@ import {
   Home,
 } from "@mui/icons-material";
 import { useAuth } from "../contexts/AuthContext";
+import MusicNoteIcon from "@mui/icons-material/MusicNote";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -44,11 +45,24 @@ const Navbar = () => {
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="fixed">
       <Toolbar>
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          Music Library
-        </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", flexGrow: 1 }}>
+          <MusicNoteIcon sx={{ mr: 1, color: "#1DB954" }} />
+          <Typography
+            variant="h6"
+            component={RouterLink}
+            to="/"
+            sx={{
+              textDecoration: "none",
+              color: "inherit",
+              fontWeight: 700,
+              letterSpacing: 1,
+            }}
+          >
+            Melodify
+          </Typography>
+        </Box>
 
         {isAuthenticated ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>

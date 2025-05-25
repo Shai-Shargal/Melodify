@@ -3,31 +3,43 @@ export interface Song {
   title: string;
   artist: string;
   youtubeId: string;
-  thumbnail: string;
-  duration: string;
-  genre: string;
-  rating: number;
+  thumbnail?: string;
+  duration?: string;
+  genre?: string;
+  rating?: number;
   isLiked: boolean;
   purpose?: string;
   emotionalState?: string;
-  userId: string;
   createdAt: string;
   updatedAt: string;
+  userId: string;
+  user: User;
+}
+
+export interface PlaylistSong {
+  id: string;
+  playlistId: string;
+  songId: string;
+  createdAt: string;
+  updatedAt: string;
+  song: Song;
 }
 
 export interface Playlist {
   id: string;
   name: string;
-  songs: Song[];
-  userId: string;
+  description?: string;
   createdAt: string;
   updatedAt: string;
+  userId: string;
+  user: User;
+  songs: PlaylistSong[];
 }
 
 export interface User {
   id: string;
-  username: string;
   email: string;
+  name: string;
   createdAt: string;
   updatedAt: string;
 }

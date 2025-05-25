@@ -80,40 +80,42 @@ export const songApi = {
 
 // Playlist related API calls
 export const playlistApi = {
-  getAll: async () => {
-    const response = await api.get("/playlists");
-    return response.data as Playlist[];
-  },
-  getById: async (id: string) => {
-    const response = await api.get(`/playlists/${id}`);
-    return response.data as Playlist;
-  },
-  create: async (data: { name: string; songs: string[] }) => {
-    const response = await api.post("/playlists", data);
-    return response.data as Playlist;
-  },
-  update: async (
-    id: string,
-    playlistData: { name: string; description?: string }
-  ) => {
-    const response = await api.put(`/playlists/${id}`, playlistData);
-    return response.data as Playlist;
-  },
-  addSong: async (playlistId: string, songId: string) => {
-    const response = await api.post(`/playlists/${playlistId}/songs`, {
-      songId,
-    });
-    return response.data as Playlist;
-  },
-  removeSong: async (playlistId: string, songId: string) => {
-    const response = await api.delete(
-      `/playlists/${playlistId}/songs/${songId}`
-    );
-    return response.data as Playlist;
-  },
-  delete: async (id: string) => {
-    const response = await api.delete(`/playlists/${id}`);
-    return response.data;
+  playlists: {
+    getAll: async () => {
+      const response = await api.get("/playlists");
+      return response.data;
+    },
+    getById: async (id: string) => {
+      const response = await api.get(`/playlists/${id}`);
+      return response.data;
+    },
+    create: async (data: { name: string; songs?: string[] }) => {
+      const response = await api.post("/playlists", data);
+      return response.data;
+    },
+    update: async (
+      id: string,
+      data: { name: string; description?: string; songs?: string[] }
+    ) => {
+      const response = await api.put(`/playlists/${id}`, data);
+      return response.data;
+    },
+    delete: async (id: string) => {
+      const response = await api.delete(`/playlists/${id}`);
+      return response.data;
+    },
+    addSong: async (playlistId: string, songId: string) => {
+      const response = await api.post(`/playlists/${playlistId}/songs`, {
+        songId,
+      });
+      return response.data;
+    },
+    removeSong: async (playlistId: string, songId: string) => {
+      const response = await api.delete(
+        `/playlists/${playlistId}/songs/${songId}`
+      );
+      return response.data;
+    },
   },
 };
 

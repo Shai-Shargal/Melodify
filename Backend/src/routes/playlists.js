@@ -48,22 +48,40 @@ router.get("/:id", async (req, res) => {
 // Create new playlist
 router.post("/", async (req, res) => {
   try {
-    const { name, description, userId, songs } = req.body;
+    console.log("Creating playlist with data:", {
+      body: req.body,
+      userId: req.userId,
+      headers: req.headers,
+    });
+
+    const { name, songs } = req.body;
+
+    if (!name) {
+      console.error("Missing playlist name");
+      return res.status(400).json({ error: "Playlist name is required" });
+    }
+
+    if (!req.userId) {
+      console.error("Missing userId in request");
+      return res.status(400).json({ error: "User ID is required" });
+    }
+
     const playlist = await prisma.playlist.create({
       data: {
         name,
-        description,
-        userId,
+        userId: req.userId,
         songs: {
-          connect: songs.map((id) => ({ id })),
+          connect: songs?.map((id) => ({ id })) || [],
         },
       },
       include: {
         songs: true,
       },
     });
+    console.log("Created playlist:", playlist);
     res.json(playlist);
   } catch (error) {
+    console.error("Error creating playlist:", error);
     res.status(400).json({ error: error.message });
   }
 });

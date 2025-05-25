@@ -13,12 +13,27 @@ const api = axios.create({
 // Add a request interceptor to include the token in all requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
+  console.log("Request interceptor - Token:", token);
   if (token) {
     config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
+    console.log("Request headers:", config.headers);
   }
   return config;
 });
+
+// Add a response interceptor to handle 401 errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear token and redirect to login
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
 
 // User related API calls
 export const userApi = {
@@ -73,13 +88,8 @@ export const playlistApi = {
     const response = await api.get(`/playlists/${id}`);
     return response.data as Playlist;
   },
-  create: async (playlistData: {
-    name: string;
-    description: string;
-    userId: string;
-    songs: string[];
-  }) => {
-    const response = await api.post("/playlists", playlistData);
+  create: async (data: { name: string; songs: string[] }) => {
+    const response = await api.post("/playlists", data);
     return response.data as Playlist;
   },
   update: async (

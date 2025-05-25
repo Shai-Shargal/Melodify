@@ -42,23 +42,29 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   const [newPlaylistName, setNewPlaylistName] = useState("");
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
-  const fetchSongs = async () => {
+  const fetchSongs = useCallback(async () => {
     try {
       const songs = await songApi.getAll();
       setSongs(songs);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching songs:", error);
+      if (error.response?.status === 401) {
+        navigate("/login");
+      }
     }
-  };
+  }, [navigate]);
 
-  const fetchPlaylists = async () => {
+  const fetchPlaylists = useCallback(async () => {
     try {
       const playlists = await playlistApi.getAll();
       setPlaylists(playlists);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching playlists:", error);
+      if (error.response?.status === 401) {
+        navigate("/login");
+      }
     }
-  };
+  }, [navigate]);
 
   const initializePlayer = useCallback(() => {
     if (window.YT && window.YT.Player) {
@@ -133,7 +139,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   useEffect(() => {
     fetchSongs();
     fetchPlaylists();
-  }, []);
+  }, [fetchSongs, fetchPlaylists]);
 
   const handleFilterChange = (
     key: keyof FilterOptions,
@@ -291,18 +297,36 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   const handleCreatePlaylist = async () => {
+    if (!newPlaylistName.trim()) {
+      setError("Please enter a playlist name");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("You must be logged in to create a playlist");
+      return;
+    }
+
     try {
-      const newPlaylist = (await playlistApi.create({
+      console.log("Creating playlist with data:", {
         name: newPlaylistName,
-        description: "",
-        userId: user.id,
         songs: [],
-      })) as Playlist;
+      });
+
+      const newPlaylist = await playlistApi.create({
+        name: newPlaylistName.trim(),
+        songs: [],
+      });
+
       setPlaylists([...playlists, newPlaylist]);
       setShowCreatePlaylistModal(false);
       setNewPlaylistName("");
     } catch (error) {
       console.error("Failed to create playlist:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to create playlist"
+      );
     }
   };
 

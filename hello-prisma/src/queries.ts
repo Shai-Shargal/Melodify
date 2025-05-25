@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
+import { downloadSong, getSongInfo } from "./youtube";
 
 const prisma = new PrismaClient().$extends(withAccelerate());
 
@@ -97,6 +98,73 @@ async function main() {
   console.log(
     `Retrieved all posts from a specific user: ${JSON.stringify(postsByUser)}`
   );
+}
+
+export async function addSongFromYouTube(youtubeUrl: string, userId: string) {
+  try {
+    const song = await downloadSong(youtubeUrl, userId);
+    return song;
+  } catch (error) {
+    console.error("Error adding song from YouTube:", error);
+    throw error;
+  }
+}
+
+export async function getSongPreview(youtubeUrl: string) {
+  try {
+    const songInfo = await getSongInfo(youtubeUrl);
+    return songInfo;
+  } catch (error) {
+    console.error("Error getting song preview:", error);
+    throw error;
+  }
+}
+
+export async function getUserSongs(userId: string) {
+  try {
+    const songs = await prisma.song.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+    });
+    return songs;
+  } catch (error) {
+    console.error("Error getting user songs:", error);
+    throw error;
+  }
+}
+
+export async function updateSongMetadata(
+  songId: string,
+  data: {
+    genre?: string;
+    purpose?: string;
+    emotionalState?: string;
+    rating?: number;
+    isLiked?: boolean;
+  }
+) {
+  try {
+    const song = await prisma.song.update({
+      where: { id: songId },
+      data,
+    });
+    return song;
+  } catch (error) {
+    console.error("Error updating song metadata:", error);
+    throw error;
+  }
+}
+
+export async function deleteSong(songId: string) {
+  try {
+    const song = await prisma.song.delete({
+      where: { id: songId },
+    });
+    return song;
+  } catch (error) {
+    console.error("Error deleting song:", error);
+    throw error;
+  }
 }
 
 main()

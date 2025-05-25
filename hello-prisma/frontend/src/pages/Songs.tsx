@@ -26,6 +26,7 @@ import {
   FavoriteBorder as FavoriteBorderIcon,
   Star as StarIcon,
   StarBorder as StarBorderIcon,
+  Search as SearchIcon,
 } from "@mui/icons-material";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
@@ -90,6 +91,12 @@ const Songs: React.FC = () => {
     genre: "",
   });
   const [editLoading, setEditLoading] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchArtist, setSearchArtist] = useState("");
+  const [searchTitle, setSearchTitle] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
 
   const fetchSongs = async () => {
     try {
@@ -199,6 +206,60 @@ const Songs: React.FC = () => {
     }
   };
 
+  const handleOpenSearch = () => {
+    setSearchOpen(true);
+    setSearchArtist("");
+    setSearchTitle("");
+    setSearchResults([]);
+    setSearchError("");
+  };
+  const handleCloseSearch = () => {
+    setSearchOpen(false);
+    setSearchArtist("");
+    setSearchTitle("");
+    setSearchResults([]);
+    setSearchError("");
+  };
+  const handleSearchYouTube = async () => {
+    setSearchLoading(true);
+    setSearchError("");
+    setSearchResults([]);
+    try {
+      const apiKey = process.env.REACT_APP_YOUTUBE_API_KEY;
+      const query = encodeURIComponent(`${searchArtist} ${searchTitle}`);
+      const res = await axios.get(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=5&q=${query}&key=${apiKey}`
+      );
+      setSearchResults(res.data.items || []);
+    } catch (err) {
+      setSearchError("Failed to search YouTube");
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+  const handleAddSearchedSong = async (video: any) => {
+    setLoading(true);
+    setError("");
+    try {
+      const youtubeUrl = `https://www.youtube.com/watch?v=${video.id.videoId}`;
+      const response = await axios.post(
+        "http://localhost:3000/songs",
+        { youtubeUrl },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setSongs([response.data, ...songs]);
+      handleCloseSearch();
+    } catch (error: any) {
+      setError(
+        error.response?.data?.error || "Failed to add song. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
       <Box
@@ -212,19 +273,30 @@ const Songs: React.FC = () => {
         <Typography variant="h4" component="h1" sx={{ color: "white" }}>
           Your Songs
         </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={handleOpen}
-          sx={{
-            backgroundColor: theme.palette.primary.main,
-            "&:hover": {
-              backgroundColor: theme.palette.primary.dark,
-            },
-          }}
+        <Box
+          sx={{ display: "flex", gap: 2, mb: 4, justifyContent: "flex-end" }}
         >
-          Add Song
-        </Button>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={handleOpen}
+            sx={{
+              backgroundColor: theme.palette.primary.main,
+              "&:hover": {
+                backgroundColor: theme.palette.primary.dark,
+              },
+            }}
+          >
+            Add Song with URL
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<SearchIcon />}
+            onClick={handleOpenSearch}
+          >
+            Add Song by Search
+          </Button>
+        </Box>
       </Box>
 
       <Paper
@@ -467,6 +539,80 @@ const Songs: React.FC = () => {
           >
             {editLoading ? "Saving..." : "Save"}
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={searchOpen} onClose={handleCloseSearch}>
+        <DialogTitle>Search and Add Song from YouTube</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Artist"
+            type="text"
+            fullWidth
+            value={searchArtist}
+            onChange={(e) => setSearchArtist(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <TextField
+            margin="dense"
+            label="Song Title"
+            type="text"
+            fullWidth
+            value={searchTitle}
+            onChange={(e) => setSearchTitle(e.target.value)}
+            sx={{ mb: 2 }}
+          />
+          <Button
+            variant="contained"
+            onClick={handleSearchYouTube}
+            disabled={!searchArtist || !searchTitle || searchLoading}
+            sx={{ mb: 2 }}
+          >
+            {searchLoading ? "Searching..." : "Search"}
+          </Button>
+          {searchError && <Typography color="error">{searchError}</Typography>}
+          {searchResults.length > 0 && (
+            <Box>
+              {searchResults.map((video) => (
+                <Box
+                  key={video.id.videoId}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 1,
+                    p: 1,
+                    borderRadius: 1,
+                    background: "#222",
+                  }}
+                >
+                  <img
+                    src={video.snippet.thumbnails.default.url}
+                    alt={video.snippet.title}
+                    style={{ width: 60, height: 45, marginRight: 8 }}
+                  />
+                  <Box sx={{ flex: 1 }}>
+                    <Typography>{video.snippet.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {video.snippet.channelTitle}
+                    </Typography>
+                  </Box>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => handleAddSearchedSong(video)}
+                    disabled={loading}
+                  >
+                    Add
+                  </Button>
+                </Box>
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSearch}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>

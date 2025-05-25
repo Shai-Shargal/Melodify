@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import Playlists from "./pages/Playlists";
 import Songs from "./pages/Songs";
 import MusicPlayer from "./components/MusicPlayer";
+import { SongsProvider, useSongs } from "./contexts/SongsContext";
 
 // Pages
 const HomePage = React.lazy(() => import("./pages/Home"));
@@ -51,6 +52,7 @@ const darkTheme = createTheme({
 
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
+  const { songs } = useSongs();
   return (
     <Box
       sx={{
@@ -115,7 +117,7 @@ const AppContent = () => {
           </Routes>
         </React.Suspense>
       </Box>
-      {isAuthenticated && <MusicPlayer />}
+      {isAuthenticated && <MusicPlayer songs={songs} />}
     </Box>
   );
 };
@@ -126,9 +128,11 @@ const App = () => {
       <CssBaseline />
       <AuthProvider>
         <PlayerProvider>
-          <Router>
-            <AppContent />
-          </Router>
+          <SongsProvider>
+            <Router>
+              <AppContent />
+            </Router>
+          </SongsProvider>
         </PlayerProvider>
       </AuthProvider>
     </ThemeProvider>

@@ -30,6 +30,7 @@ import {
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { usePlayer } from "../contexts/PlayerContext";
+import { useSongs } from "../contexts/SongsContext";
 
 interface Song {
   id: string;
@@ -74,7 +75,7 @@ const Songs: React.FC = () => {
   const theme = useTheme();
   const { token } = useAuth();
   const { currentSong, isPlaying, setCurrentSong, setIsPlaying } = usePlayer();
-  const [songs, setSongs] = useState<Song[]>([]);
+  const { songs, setSongs } = useSongs();
   const [open, setOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [error, setError] = useState("");

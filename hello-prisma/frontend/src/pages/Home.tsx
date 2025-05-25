@@ -6,7 +6,7 @@ const Home: React.FC = () => {
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         <Typography variant="h2" component="h1" gutterBottom>
-          Welcome to Music Library
+          Welcome to Melodify
         </Typography>
         <Typography variant="h5" component="h2" gutterBottom>
           Your personal music collection

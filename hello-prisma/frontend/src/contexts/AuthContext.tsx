@@ -9,11 +9,12 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  token: string | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
-  isAuthenticated: boolean;
-  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -22,36 +23,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const verifyToken = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          setIsLoading(false);
-          return;
-        }
-
-        // Set up axios default headers
-        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-        // Try to get user data from the backend
-        const response = await axios.get("http://localhost:3000/auth/me");
-        setUser(response.data.user);
-      } catch (error) {
-        console.error("Token verification failed:", error);
-        // Clear invalid token
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        setUser(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    verifyToken();
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      verifyToken(storedToken);
+    } else {
+      setIsLoading(false);
+    }
   }, []);
+
+  const verifyToken = async (token: string) => {
+    try {
+      const response = await axios.get("http://localhost:3000/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(response.data.user);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error("Token verification failed:", error);
+      logout();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -59,14 +58,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         email,
         password,
       });
-
-      const { user: userData, token } = response.data;
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      const { token, user } = response.data;
       localStorage.setItem("token", token);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      setToken(token);
+      setUser(user);
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Login failed:", error);
       throw error;
     }
   };
@@ -78,34 +76,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         email,
         password,
       });
-
-      const { user: userData, token } = response.data;
-      setUser(userData);
-      localStorage.setItem("user", JSON.stringify(userData));
+      const { token, user } = response.data;
       localStorage.setItem("token", token);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      setToken(token);
+      setUser(user);
+      setIsAuthenticated(true);
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("Registration failed:", error);
       throw error;
     }
   };
 
   const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
     localStorage.removeItem("token");
-    delete axios.defaults.headers.common["Authorization"];
+    setToken(null);
+    setUser(null);
+    setIsAuthenticated(false);
   };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        token,
+        isAuthenticated,
+        isLoading,
         login,
         register,
         logout,
-        isAuthenticated: !!user,
-        isLoading,
       }}
     >
       {children}

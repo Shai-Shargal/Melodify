@@ -431,6 +431,50 @@ const deleteSongHandler: RequestHandler = async (
   }
 };
 
+// PATCH endpoint to update song metadata
+app.patch(
+  "/songs/:id",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      const songId = req.params.id;
+      const { rating, purpose, emotionalState, isLiked, genre } = req.body;
+
+      // Find the song and check ownership
+      const song = await prisma.song.findUnique({ where: { id: songId } });
+      if (!song) {
+        return res.status(404).json({ error: "Song not found" });
+      }
+      if (song.userId !== req.user.userId) {
+        return res
+          .status(403)
+          .json({ error: "Not authorized to update this song" });
+      }
+
+      // Only update provided fields
+      const updateData: any = {};
+      if (rating !== undefined) updateData.rating = rating;
+      if (purpose !== undefined) updateData.purpose = purpose;
+      if (emotionalState !== undefined)
+        updateData.emotionalState = emotionalState;
+      if (isLiked !== undefined) updateData.isLiked = isLiked;
+      if (genre !== undefined) updateData.genre = genre;
+
+      const updatedSong = await prisma.song.update({
+        where: { id: songId },
+        data: updateData,
+      });
+      res.json(updatedSong);
+    } catch (error) {
+      console.error("Error updating song metadata:", error);
+      res.status(500).json({ error: "Failed to update song metadata" });
+    }
+  }
+);
+
 // Register song routes
 app.get("/songs", authenticateToken, getSongsHandler);
 app.post("/songs", authenticateToken, createSongHandler);

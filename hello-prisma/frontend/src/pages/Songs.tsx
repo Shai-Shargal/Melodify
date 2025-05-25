@@ -1,255 +1,289 @@
 import React, { useState, useEffect } from "react";
 import {
-  Container,
-  Typography,
   Box,
-  TextField,
   Button,
-  Card,
-  CardContent,
-  CardActions,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Alert,
+  TextField,
+  Typography,
+  Paper,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  useTheme,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
+import {
+  Add as AddIcon,
+  PlayArrow as PlayIcon,
+  Pause as PauseIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  Favorite as FavoriteIcon,
+  FavoriteBorder as FavoriteBorderIcon,
+  Star as StarIcon,
+  StarBorder as StarBorderIcon,
+} from "@mui/icons-material";
 import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
+import { usePlayer } from "../contexts/PlayerContext";
 
 interface Song {
   id: string;
   title: string;
   artist: string;
-  youtubeUrl: string;
+  youtubeId: string;
   createdAt: string;
+  rating?: number;
+  purpose?: string;
+  emotionalState?: string;
+  isLiked?: boolean;
+  genre?: string;
 }
 
-interface Playlist {
-  id: string;
-  name: string;
-}
+const genreOptions = [
+  "Pop",
+  "Rock",
+  "Hip-Hop",
+  "Jazz",
+  "Classical",
+  "Electronic",
+  "Other",
+];
+const purposeOptions = [
+  "Workout",
+  "Relax",
+  "Study",
+  "Party",
+  "Commute",
+  "Other",
+];
+const emotionalStateOptions = [
+  "Happy",
+  "Sad",
+  "Energetic",
+  "Calm",
+  "Romantic",
+  "Other",
+];
 
 const Songs: React.FC = () => {
-  const { isAuthenticated } = useAuth();
+  const theme = useTheme();
+  const { token } = useAuth();
+  const { currentSong, isPlaying, setCurrentSong, setIsPlaying } = usePlayer();
   const [songs, setSongs] = useState<Song[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [open, setOpen] = useState(false);
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [error, setError] = useState("");
-  const [selectedPlaylist, setSelectedPlaylist] = useState("");
-  const [addToPlaylistOpen, setAddToPlaylistOpen] = useState(false);
-  const [selectedSong, setSelectedSong] = useState<Song | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSong, setEditSong] = useState<Song | null>(null);
+  const [editFields, setEditFields] = useState({
+    rating: 0,
+    purpose: "",
+    emotionalState: "",
+    isLiked: false,
+    genre: "",
+  });
+  const [editLoading, setEditLoading] = useState(false);
 
   const fetchSongs = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
       const response = await axios.get("http://localhost:3000/songs", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
       setSongs(response.data);
-    } catch (err) {
-      console.error("Error fetching songs:", err);
-    }
-  };
-
-  const fetchPlaylists = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const response = await axios.get("http://localhost:3000/playlists", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setPlaylists(response.data);
-    } catch (err) {
-      console.error("Error fetching playlists:", err);
+    } catch (error) {
+      console.error("Error fetching songs:", error);
     }
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchSongs();
-      fetchPlaylists();
-    }
-  }, [isAuthenticated]);
+    fetchSongs();
+  }, [token]);
 
-  const handleOpen = () => {
-    if (!isAuthenticated) {
-      setError("Please log in to add songs");
-      return;
-    }
-    setOpen(true);
-  };
-
+  const handleOpen = () => setOpen(true);
   const handleClose = () => {
     setOpen(false);
     setYoutubeUrl("");
     setError("");
   };
 
-  const handleAddToPlaylist = (song: Song) => {
-    setSelectedSong(song);
-    setAddToPlaylistOpen(true);
-  };
-
-  const handleAddToPlaylistClose = () => {
-    setAddToPlaylistOpen(false);
-    setSelectedSong(null);
-    setSelectedPlaylist("");
-  };
-
-  const handleAddToPlaylistSubmit = async () => {
-    if (!selectedSong || !selectedPlaylist) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      await axios.post(
-        `http://localhost:3000/playlists/${selectedPlaylist}/songs`,
-        { songId: selectedSong.id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      handleAddToPlaylistClose();
-    } catch (err) {
-      console.error("Error adding song to playlist:", err);
-      setError("Failed to add song to playlist");
-    }
-  };
-
-  const handleAddSong = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Please log in to add songs");
-        return;
-      }
-
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:3000/songs",
         { youtubeUrl },
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+      setSongs([response.data, ...songs]);
       handleClose();
-      fetchSongs();
-    } catch (err) {
-      setError("Failed to add song. Please check the YouTube URL.");
-      console.error("Add song error:", err);
+    } catch (error: any) {
+      setError(
+        error.response?.data?.error || "Failed to add song. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteSong = async (songId: string) => {
+  const handleDelete = async (songId: string) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
       await axios.delete(`http://localhost:3000/songs/${songId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
+      setSongs(songs.filter((song) => song.id !== songId));
+      if (currentSong?.id === songId) {
+        setCurrentSong(null);
+        setIsPlaying(false);
+      }
+    } catch (error) {
+      console.error("Error deleting song:", error);
+    }
+  };
 
-      fetchSongs();
-    } catch (err) {
-      console.error("Error deleting song:", err);
+  const handlePlay = (song: Song) => {
+    if (currentSong?.id === song.id) {
+      setIsPlaying(!isPlaying);
+    } else {
+      setCurrentSong(song);
+      setIsPlaying(true);
+    }
+  };
+
+  const openEditDialog = (song: Song) => {
+    setEditSong(song);
+    setEditFields({
+      rating: song.rating ?? 0,
+      purpose: song.purpose ?? "",
+      emotionalState: song.emotionalState ?? "",
+      isLiked: song.isLiked ?? false,
+      genre: song.genre ?? "",
+    });
+    setEditOpen(true);
+  };
+  const closeEditDialog = () => {
+    setEditOpen(false);
+    setEditSong(null);
+  };
+  const handleEditFieldChange = (field: string, value: any) => {
+    setEditFields((prev) => ({ ...prev, [field]: value }));
+  };
+  const handleEditSave = async () => {
+    if (!editSong) return;
+    setEditLoading(true);
+    try {
+      const response = await axios.patch(
+        `http://localhost:3000/songs/${editSong.id}`,
+        editFields,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setSongs((prev) =>
+        prev.map((s) => (s.id === editSong.id ? { ...s, ...response.data } : s))
+      );
+      closeEditDialog();
+    } catch (error) {
+      alert("Failed to update song");
+    } finally {
+      setEditLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Box
+    <Box sx={{ maxWidth: 800, mx: "auto", p: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 4,
+        }}
+      >
+        <Typography variant="h4" component="h1" sx={{ color: "white" }}>
+          Your Songs
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={handleOpen}
           sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            mb: 3,
+            backgroundColor: theme.palette.primary.main,
+            "&:hover": {
+              backgroundColor: theme.palette.primary.dark,
+            },
           }}
         >
-          <Typography variant="h4" component="h1">
-            My Songs
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleOpen}
-          >
-            Add Song
-          </Button>
-        </Box>
+          Add Song
+        </Button>
+      </Box>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-            gap: 3,
-          }}
-        >
+      <Paper
+        sx={{
+          backgroundColor: theme.palette.background.paper,
+          borderRadius: 2,
+          overflow: "hidden",
+        }}
+      >
+        <List>
           {songs.map((song) => (
-            <Card key={song.id}>
-              <CardContent>
-                <Typography variant="h6" component="h2">
-                  {song.title}
-                </Typography>
-                <Typography color="text.secondary" sx={{ mt: 1 }}>
-                  {song.artist}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mt: 1 }}
-                >
-                  Added: {new Date(song.createdAt).toLocaleDateString()}
-                </Typography>
-              </CardContent>
-              <CardActions>
-                <Button size="small" onClick={() => handleAddToPlaylist(song)}>
-                  Add to Playlist
-                </Button>
+            <ListItem
+              key={song.id}
+              sx={{
+                borderBottom: `1px solid ${theme.palette.divider}`,
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.05)",
+                },
+              }}
+            >
+              <IconButton
+                onClick={() => handlePlay(song)}
+                sx={{ mr: 2, color: theme.palette.primary.main }}
+              >
+                {currentSong?.id === song.id && isPlaying ? (
+                  <PauseIcon />
+                ) : (
+                  <PlayIcon />
+                )}
+              </IconButton>
+              <IconButton onClick={() => openEditDialog(song)} sx={{ ml: 1 }}>
+                <EditIcon />
+              </IconButton>
+              <ListItemText
+                primary={song.title}
+                secondary={song.artist}
+                primaryTypographyProps={{
+                  sx: { color: "white" },
+                }}
+                secondaryTypographyProps={{
+                  sx: { color: "text.secondary" },
+                }}
+              />
+              <ListItemSecondaryAction>
                 <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => handleDeleteSong(song.id)}
+                  edge="end"
+                  onClick={() => handleDelete(song.id)}
+                  sx={{ color: "error.main" }}
                 >
                   <DeleteIcon />
                 </IconButton>
-              </CardActions>
-            </Card>
+              </ListItemSecondaryAction>
+            </ListItem>
           ))}
-        </Box>
+        </List>
+      </Paper>
 
-        <Dialog open={open} onClose={handleClose}>
-          <DialogTitle>Add New Song</DialogTitle>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Add New Song</DialogTitle>
+        <form onSubmit={handleSubmit}>
           <DialogContent>
             <TextField
               autoFocus
@@ -261,47 +295,117 @@ const Songs: React.FC = () => {
               onChange={(e) => setYoutubeUrl(e.target.value)}
               error={!!error}
               helperText={error}
+              placeholder="https://www.youtube.com/watch?v=..."
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button onClick={handleAddSong} variant="contained">
-              Add
-            </Button>
-          </DialogActions>
-        </Dialog>
-
-        <Dialog open={addToPlaylistOpen} onClose={handleAddToPlaylistClose}>
-          <DialogTitle>Add to Playlist</DialogTitle>
-          <DialogContent>
-            <FormControl fullWidth sx={{ mt: 2 }}>
-              <InputLabel>Select Playlist</InputLabel>
-              <Select
-                value={selectedPlaylist}
-                label="Select Playlist"
-                onChange={(e) => setSelectedPlaylist(e.target.value)}
-              >
-                {playlists.map((playlist) => (
-                  <MenuItem key={playlist.id} value={playlist.id}>
-                    {playlist.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleAddToPlaylistClose}>Cancel</Button>
             <Button
-              onClick={handleAddToPlaylistSubmit}
+              type="submit"
               variant="contained"
-              disabled={!selectedPlaylist}
+              disabled={loading || !youtubeUrl}
             >
-              Add
+              {loading ? "Adding..." : "Add Song"}
             </Button>
           </DialogActions>
-        </Dialog>
-      </Box>
-    </Container>
+        </form>
+      </Dialog>
+
+      <Dialog open={editOpen} onClose={closeEditDialog}>
+        <DialogTitle>Edit Song</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+            <Typography sx={{ mr: 1 }}>Rating:</Typography>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <IconButton
+                key={star}
+                onClick={() => handleEditFieldChange("rating", star)}
+                color={editFields.rating >= star ? "primary" : "default"}
+              >
+                {editFields.rating >= star ? <StarIcon /> : <StarBorderIcon />}
+              </IconButton>
+            ))}
+          </Box>
+          <TextField
+            select
+            label="Purpose"
+            value={editFields.purpose}
+            onChange={(e) => handleEditFieldChange("purpose", e.target.value)}
+            fullWidth
+            margin="dense"
+            SelectProps={{ native: true }}
+            sx={{ mb: 2 }}
+          >
+            <option value=""></option>
+            {purposeOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </TextField>
+          <TextField
+            select
+            label="Emotional State"
+            value={editFields.emotionalState}
+            onChange={(e) =>
+              handleEditFieldChange("emotionalState", e.target.value)
+            }
+            fullWidth
+            margin="dense"
+            SelectProps={{ native: true }}
+            sx={{ mb: 2 }}
+          >
+            <option value=""></option>
+            {emotionalStateOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </TextField>
+          <TextField
+            select
+            label="Genre"
+            value={editFields.genre}
+            onChange={(e) => handleEditFieldChange("genre", e.target.value)}
+            fullWidth
+            margin="dense"
+            SelectProps={{ native: true }}
+            sx={{ mb: 2 }}
+          >
+            <option value=""></option>
+            {genreOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </TextField>
+          <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
+            <Typography sx={{ mr: 1 }}>Liked:</Typography>
+            <IconButton
+              onClick={() =>
+                handleEditFieldChange("isLiked", !editFields.isLiked)
+              }
+            >
+              {editFields.isLiked ? (
+                <FavoriteIcon color="error" />
+              ) : (
+                <FavoriteBorderIcon />
+              )}
+            </IconButton>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeEditDialog}>Cancel</Button>
+          <Button
+            onClick={handleEditSave}
+            variant="contained"
+            disabled={editLoading}
+          >
+            {editLoading ? "Saving..." : "Save"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

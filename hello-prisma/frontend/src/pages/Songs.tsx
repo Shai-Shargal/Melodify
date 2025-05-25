@@ -258,14 +258,77 @@ const Songs: React.FC = () => {
                 <EditIcon />
               </IconButton>
               <ListItemText
-                primary={song.title}
-                secondary={song.artist}
-                primaryTypographyProps={{
-                  sx: { color: "white" },
-                }}
-                secondaryTypographyProps={{
-                  sx: { color: "text.secondary" },
-                }}
+                primary={
+                  <Box>
+                    <Typography sx={{ color: "white" }}>
+                      {song.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {song.artist}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 2,
+                        mt: 0.5,
+                      }}
+                    >
+                      {/* Rating */}
+                      <Box sx={{ display: "flex", alignItems: "center" }}>
+                        {[1, 2, 3, 4, 5].map((star) =>
+                          song.rating && song.rating >= star ? (
+                            <StarIcon
+                              key={star}
+                              fontSize="small"
+                              color="primary"
+                            />
+                          ) : (
+                            <StarBorderIcon
+                              key={star}
+                              fontSize="small"
+                              color="disabled"
+                            />
+                          )
+                        )}
+                      </Box>
+                      {/* Genre */}
+                      {song.genre && (
+                        <Typography
+                          variant="caption"
+                          color="primary"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          {song.genre}
+                        </Typography>
+                      )}
+                      {/* Purpose */}
+                      {song.purpose && (
+                        <Typography
+                          variant="caption"
+                          color="secondary"
+                          sx={{ fontWeight: 500 }}
+                        >
+                          {song.purpose}
+                        </Typography>
+                      )}
+                      {/* Emotional State */}
+                      {song.emotionalState && (
+                        <Typography variant="caption" color="text.secondary">
+                          {song.emotionalState}
+                        </Typography>
+                      )}
+                      {/* Liked */}
+                      {song.isLiked && (
+                        <FavoriteIcon
+                          fontSize="small"
+                          color="error"
+                          sx={{ ml: 1 }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                }
               />
               <ListItemSecondaryAction>
                 <IconButton

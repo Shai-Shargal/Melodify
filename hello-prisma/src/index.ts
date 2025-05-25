@@ -531,6 +531,44 @@ app.post(
   }
 );
 
+// Get all songs in a playlist
+app.get(
+  "/playlists/:playlistId/songs",
+  authenticateToken,
+  async (req: Request, res: Response) => {
+    try {
+      const { playlistId } = req.params;
+      if (!req.user) {
+        return res.status(401).json({ error: "User not authenticated" });
+      }
+      // Check playlist ownership
+      const playlist = await prisma.playlist.findUnique({
+        where: { id: playlistId },
+        include: { songs: true },
+      });
+      if (!playlist) {
+        return res.status(404).json({ error: "Playlist not found" });
+      }
+      if (playlist.userId !== req.user.userId) {
+        return res
+          .status(403)
+          .json({ error: "Not authorized to view this playlist" });
+      }
+      // Get songs in playlist
+      const playlistSongs = await prisma.playlistSong.findMany({
+        where: { playlistId },
+        include: { song: true },
+        orderBy: { createdAt: "asc" },
+      });
+      const songs = playlistSongs.map((ps) => ps.song);
+      res.json(songs);
+    } catch (error) {
+      console.error("Error fetching playlist songs:", error);
+      res.status(500).json({ error: "Failed to fetch playlist songs" });
+    }
+  }
+);
+
 // Start server
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

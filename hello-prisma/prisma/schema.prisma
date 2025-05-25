@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  name      String     @default("")
+  password  String     @default("")
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now())
+  songs     Song[]     @relation("UserSongs")
+  playlists Playlist[] @relation("UserPlaylists")
+}
+
+model Song {
+  id             String     @id @default(uuid())
+  title          String
+  artist         String
+  youtubeId      String     @unique
+  thumbnail      String?
+  duration       String?
+  genre          String?
+  rating         Int?       @default(0)
+  isLiked        Boolean    @default(false)
+  purpose        String?
+  emotionalState String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  userId         String
+  user           User       @relation("UserSongs", fields: [userId], references: [id])
+  playlists      PlaylistSong[]
+}
+
+model Playlist {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  userId      String
+  user        User     @relation("UserPlaylists", fields: [userId], references: [id])
+  songs       PlaylistSong[]
+}
+
+model PlaylistSong {
+  id         String   @id @default(uuid())
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  playlistId String
+  song       Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  songId     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([playlistId, songId])
+}

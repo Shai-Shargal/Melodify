@@ -1,17 +1,5 @@
 import React, { createContext, useContext, useState } from "react";
-
-export interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  youtubeId: string;
-  createdAt: string;
-  rating?: number;
-  purpose?: string;
-  emotionalState?: string;
-  isLiked?: boolean;
-  genre?: string;
-}
+import { Song } from "../types";
 
 interface SongsContextType {
   songs: Song[];
@@ -24,6 +12,7 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [songs, setSongs] = useState<Song[]>([]);
+
   return (
     <SongsContext.Provider value={{ songs, setSongs }}>
       {children}
@@ -33,6 +22,8 @@ export const SongsProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useSongs = () => {
   const context = useContext(SongsContext);
-  if (!context) throw new Error("useSongs must be used within a SongsProvider");
+  if (context === undefined) {
+    throw new Error("useSongs must be used within a SongsProvider");
+  }
   return context;
 };

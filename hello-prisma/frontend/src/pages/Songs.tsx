@@ -32,19 +32,7 @@ import axios from "axios";
 import { useAuth } from "../contexts/AuthContext";
 import { usePlayer } from "../contexts/PlayerContext";
 import { useSongs } from "../contexts/SongsContext";
-
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  youtubeId: string;
-  createdAt: string;
-  rating?: number;
-  purpose?: string;
-  emotionalState?: string;
-  isLiked?: boolean;
-  genre?: string;
-}
+import { Song } from "../types";
 
 const genreOptions = [
   "Pop",
@@ -308,111 +296,122 @@ const Songs: React.FC = () => {
       >
         <List>
           {songs.map((song) => (
-            <ListItem
+            <Box
               key={song.id}
               sx={{
-                borderBottom: `1px solid ${theme.palette.divider}`,
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.05)",
-                },
+                display: "flex",
+                alignItems: "center",
+                mb: 1,
+                p: 2,
+                borderRadius: 1,
+                background: "#222",
+                position: "relative",
+                minHeight: 80,
               }}
             >
-              <IconButton
-                onClick={() => handlePlay(song)}
-                sx={{ mr: 2, color: theme.palette.primary.main }}
-              >
-                {currentSong?.id === song.id && isPlaying ? (
-                  <PauseIcon />
-                ) : (
-                  <PlayIcon />
-                )}
-              </IconButton>
-              <IconButton onClick={() => openEditDialog(song)} sx={{ ml: 1 }}>
-                <EditIcon />
-              </IconButton>
-              <ListItemText
-                primary={
-                  <Box>
-                    <Typography sx={{ color: "white" }}>
-                      {song.title}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {song.artist}
-                    </Typography>
-                    <Box
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        mt: 0.5,
-                      }}
-                    >
-                      {/* Rating */}
-                      <Box sx={{ display: "flex", alignItems: "center" }}>
-                        {[1, 2, 3, 4, 5].map((star) =>
-                          song.rating && song.rating >= star ? (
-                            <StarIcon
-                              key={star}
-                              fontSize="small"
-                              color="primary"
-                            />
-                          ) : (
-                            <StarBorderIcon
-                              key={star}
-                              fontSize="small"
-                              color="disabled"
-                            />
-                          )
-                        )}
-                      </Box>
-                      {/* Genre */}
-                      {song.genre && (
-                        <Typography
-                          variant="caption"
-                          color="primary"
-                          sx={{ fontWeight: 500 }}
-                        >
-                          {song.genre}
-                        </Typography>
-                      )}
-                      {/* Purpose */}
-                      {song.purpose && (
-                        <Typography
-                          variant="caption"
-                          color="secondary"
-                          sx={{ fontWeight: 500 }}
-                        >
-                          {song.purpose}
-                        </Typography>
-                      )}
-                      {/* Emotional State */}
-                      {song.emotionalState && (
-                        <Typography variant="caption" color="text.secondary">
-                          {song.emotionalState}
-                        </Typography>
-                      )}
-                      {/* Liked */}
-                      {song.isLiked && (
-                        <FavoriteIcon
-                          fontSize="small"
-                          color="error"
-                          sx={{ ml: 1 }}
-                        />
-                      )}
-                    </Box>
+              {song.thumbnail && (
+                <Box
+                  sx={{
+                    width: 80,
+                    height: 80,
+                    mr: 2,
+                    borderRadius: 1,
+                    overflow: "hidden",
+                    flexShrink: 0,
+                  }}
+                >
+                  <img
+                    src={song.thumbnail}
+                    alt={song.title}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </Box>
+              )}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography noWrap>{song.title}</Typography>
+                <Typography variant="body2" color="text.secondary" noWrap>
+                  {song.artist}
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    mt: 0.5,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  {/* Rating Stars */}
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <StarIcon
+                        key={star}
+                        sx={{
+                          fontSize: 16,
+                          color:
+                            song.rating && song.rating >= star
+                              ? "primary.main"
+                              : "text.disabled",
+                        }}
+                      />
+                    ))}
                   </Box>
-                }
-              />
-              <ListItemSecondaryAction>
+                  {/* Genre */}
+                  {song.genre && (
+                    <Typography
+                      variant="caption"
+                      color="primary"
+                      sx={{ fontWeight: 500 }}
+                    >
+                      {song.genre}
+                    </Typography>
+                  )}
+                  {/* Purpose */}
+                  {song.purpose && (
+                    <Typography
+                      variant="caption"
+                      color="secondary"
+                      sx={{ fontWeight: 500 }}
+                    >
+                      {song.purpose}
+                    </Typography>
+                  )}
+                  {/* Emotional State */}
+                  {song.emotionalState && (
+                    <Typography variant="caption" color="text.secondary">
+                      {song.emotionalState}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, ml: 2 }}
+              >
                 <IconButton
-                  edge="end"
+                  onClick={() => handlePlay(song)}
+                  sx={{ color: theme.palette.primary.main }}
+                >
+                  {currentSong?.id === song.id && isPlaying ? (
+                    <PauseIcon />
+                  ) : (
+                    <PlayIcon />
+                  )}
+                </IconButton>
+                <IconButton onClick={() => openEditDialog(song)}>
+                  <EditIcon />
+                </IconButton>
+                <IconButton
                   onClick={() => handleDelete(song.id)}
                   sx={{ color: "error.main" }}
                 >
                   <DeleteIcon />
                 </IconButton>
-              </ListItemSecondaryAction>
-            </ListItem>
+              </Box>
+            </Box>
           ))}
         </List>
       </Paper>

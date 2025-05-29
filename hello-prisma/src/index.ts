@@ -421,6 +421,7 @@ const createSongHandler: RequestHandler = async (
       console.log("Video info received:", {
         title: videoInfo.title,
         channelTitle: videoInfo.channelTitle,
+        thumbnailUrl: videoInfo.thumbnails.high?.url,
       });
 
       // Create song with actual video info
@@ -430,6 +431,7 @@ const createSongHandler: RequestHandler = async (
           title: videoInfo.title,
           artist: videoInfo.channelTitle,
           youtubeId,
+          thumbnail: videoInfo.thumbnails.high?.url || null,
           user: {
             connect: {
               id: req.user.userId,

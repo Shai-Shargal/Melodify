@@ -332,7 +332,17 @@ const Songs: React.FC = () => {
                 </Box>
               )}
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography noWrap>{song.title}</Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Typography noWrap>{song.title}</Typography>
+                  {song.isLiked && (
+                    <FavoriteIcon
+                      sx={{
+                        fontSize: 16,
+                        color: "error.main",
+                      }}
+                    />
+                  )}
+                </Box>
                 <Typography variant="body2" color="text.secondary" noWrap>
                   {song.artist}
                 </Typography>

@@ -263,8 +263,75 @@ const getPlaylistsHandler: RequestHandler = async (
   }
 };
 
+// Delete playlist
+const deletePlaylistHandler: RequestHandler = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  console.log("Received delete playlist request:", {
+    params: req.params,
+    user: req.user,
+    headers: req.headers,
+  });
+
+  try {
+    if (!req.user) {
+      console.log("No user found in request");
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
+    const playlistId = req.params.id;
+    const userId = req.user.userId;
+
+    console.log("Attempting to delete playlist:", { playlistId, userId });
+
+    // Verify playlist ownership
+    const playlist = await prisma.playlist.findUnique({
+      where: { id: playlistId },
+    });
+
+    console.log("Found playlist:", playlist);
+
+    if (!playlist) {
+      console.log("Playlist not found:", playlistId);
+      res.status(404).json({ error: "Playlist not found" });
+      return;
+    }
+
+    if (playlist.userId !== userId) {
+      console.log("User not authorized:", {
+        playlistUserId: playlist.userId,
+        requestUserId: userId,
+      });
+      res.status(403).json({ error: "Not authorized to delete this playlist" });
+      return;
+    }
+
+    // Delete playlist songs first
+    console.log("Deleting playlist songs");
+    await prisma.playlistSong.deleteMany({
+      where: { playlistId },
+    });
+
+    // Delete the playlist
+    console.log("Deleting playlist");
+    await prisma.playlist.delete({
+      where: { id: playlistId },
+    });
+
+    console.log("Playlist deleted successfully");
+    res.status(200).json({ message: "Playlist deleted successfully" });
+  } catch (error) {
+    console.error("Delete playlist error:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Register all playlist routes together
 app.post("/playlists", authenticateToken, createPlaylistHandler);
 app.get("/playlists", authenticateToken, getPlaylistsHandler);
+app.delete("/playlists/:id", authenticateToken, deletePlaylistHandler);
 
 // Song management endpoints
 const getSongsHandler: RequestHandler = async (

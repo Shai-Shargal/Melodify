@@ -268,6 +268,40 @@ const Playlists: React.FC = () => {
     setPlaylistPlayerIndex(0);
   }, [playlistSongsDialogOpen, playlistSongs.length]);
 
+  const handleDeletePlaylist = async (playlistId: string) => {
+    if (!token) {
+      alert("Please log in to delete playlists");
+      return;
+    }
+
+    try {
+      console.log("Attempting to delete playlist:", playlistId);
+      const response = await axios.delete(
+        `http://localhost:3000/playlists/${playlistId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Delete response:", response.data);
+      setPlaylists(playlists.filter((p) => p.id !== playlistId));
+    } catch (error) {
+      console.error("Error deleting playlist:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMessage = error.response?.data?.error || error.message;
+        console.error("Error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message,
+        });
+        alert(`Failed to delete playlist: ${errorMessage}`);
+      } else {
+        alert("Failed to delete playlist. Please try again.");
+      }
+    }
+  };
+
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
@@ -331,7 +365,14 @@ const Playlists: React.FC = () => {
                 >
                   <AddIcon />
                 </IconButton>
-                <IconButton size="small" color="error">
+                <IconButton
+                  size="small"
+                  color="error"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeletePlaylist(playlist.id);
+                  }}
+                >
                   <DeleteIcon />
                 </IconButton>
               </CardActions>
